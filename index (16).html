@@ -1,0 +1,977 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Programa GM Coresolutions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500&family=Geist+Mono:wght@300;400;500&display=swap">
+<style>
+/* Layout: one quiet column, mono labels, extreme negative space. Coresolutions navy used only for state and progress. */
+:root{
+  --bg:#ffffff; --fg:#0c0c10; --muted:#6a6b76; --line:#e7e7ee; --soft:#f6f6f9;
+  --accent:#01095c; --accent-soft:#eceefb;
+  --ok:#1d7a47; --warn:#a86a12; --bad:#b3362b;
+  --mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --sans:"Geist",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0a0a0c; --fg:#f2f2f5; --muted:#8d8e99; --line:#24242b; --soft:#141418;
+  --accent:#9aa3ff; --accent-soft:#171a33; --ok:#4fc283; --warn:#e0a648; --bad:#ef7a6e; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0a0a0c; --fg:#f2f2f5; --muted:#8d8e99; --line:#24242b; --soft:#141418;
+  --accent:#9aa3ff; --accent-soft:#171a33; --ok:#4fc283; --warn:#e0a648; --bad:#ef7a6e; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-weight:300;font-size:15px;line-height:1.6;padding-inline:20px;padding-block:0 80px}
+.wrap{max-width:780px;margin:0 auto}
+header{padding-block:56px 28px}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+h1{font-family:var(--mono);font-weight:400;font-size:clamp(28px,6vw,44px);letter-spacing:-.02em;line-height:1.1;margin:14px 0 12px;text-wrap:balance}
+h2{font-family:var(--mono);font-weight:400;font-size:22px;letter-spacing:-.01em;margin:0 0 8px;text-wrap:balance}
+h3{font-family:var(--mono);font-weight:400;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:44px 0 14px}
+p{margin:0 0 12px;max-width:62ch}
+a{color:var(--accent)}
+.lede{color:var(--muted);max-width:58ch}
+.bar{height:2px;background:var(--line);margin-top:28px;position:relative}
+.bar i{position:absolute;inset:0 auto 0 0;background:var(--accent);transition:width .4s}
+.barlabel{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:8px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+
+nav{position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);z-index:5;border-bottom:1px solid var(--line);display:flex;gap:2px;overflow-x:auto}
+nav button{font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;background:none;border:0;color:var(--muted);padding:14px 11px;cursor:pointer;border-bottom:1px solid transparent;margin-bottom:-1px;white-space:nowrap}
+nav button[aria-selected="true"]{color:var(--fg);border-color:var(--fg)}
+button:focus-visible,input:focus-visible,textarea:focus-visible,.row:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+section{padding-top:36px}
+.row{display:grid;grid-template-columns:44px 1fr auto;gap:16px;align-items:baseline;padding:16px 0;border-bottom:1px solid var(--line);cursor:pointer;background:none;border-left:0;border-right:0;border-top:0;width:100%;text-align:left;color:inherit;font:inherit}
+.row:hover .rt{color:var(--accent)}
+.rn{font-family:var(--mono);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.rt{font-family:var(--mono);font-size:15px;transition:color .15s}
+.rs{font-size:13px;color:var(--muted);margin-top:2px}
+.chip{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border:1px solid var(--line);border-radius:99px;color:var(--muted);white-space:nowrap}
+.chip.done{border-color:var(--accent);color:var(--accent)}
+.chip.ok{border-color:var(--ok);color:var(--ok)} .chip.warn{border-color:var(--warn);color:var(--warn)} .chip.bad{border-color:var(--bad);color:var(--bad)}
+
+.block{margin-top:40px}
+.blockhead{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:baseline;border-bottom:1px solid var(--fg);padding-bottom:10px}
+.blockhead .bt{font-family:var(--mono);font-size:15px}
+.blockhead .bm{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.blockdesc{font-size:13px;color:var(--muted);margin-top:8px;max-width:62ch}
+
+.back{font-family:var(--mono);font-size:12px;background:none;border:0;color:var(--muted);cursor:pointer;padding:0;margin-bottom:28px}
+.back:hover{color:var(--fg)}
+.why{font-size:19px;line-height:1.5;font-weight:300;max-width:52ch;margin:10px 0 0}
+dl{margin:0;display:grid;gap:18px}
+dt{font-family:var(--mono);font-size:13px;margin-bottom:2px}
+dd{margin:0;color:var(--muted);max-width:62ch}
+ul.core{list-style:none;padding:0;margin:0;display:grid;gap:10px}
+ul.core li{padding-left:22px;position:relative;max-width:64ch}
+ul.core li::before{content:"→";position:absolute;left:0;font-family:var(--mono);color:var(--accent)}
+ul.core.neg li::before{content:"—";color:var(--muted)}
+
+.tool{background:var(--soft);border-radius:4px;padding:24px;margin-top:8px}
+.tool .tag{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:16px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
+label.f{display:grid;gap:4px;font-family:var(--mono);font-size:11px;color:var(--muted);align-content:end}
+input[type=number],input[type=text]{font-family:var(--mono);font-size:14px;padding:9px 10px;border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:3px;width:100%;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.out{margin-top:20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:16px;border-top:1px solid var(--line);padding-top:18px}
+.out div span{display:block;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.out div b{font-family:var(--mono);font-weight:400;font-size:20px;font-variant-numeric:tabular-nums}
+.note{font-size:13px;color:var(--muted);margin-top:14px;max-width:62ch}
+.split{display:grid;gap:10px;margin-top:18px}
+.split .ln{display:grid;grid-template-columns:120px 1fr 52px;gap:10px;align-items:center;font-family:var(--mono);font-size:12px}
+.split .tr{height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+.split .tr i{display:block;height:100%;background:var(--accent)}
+.split .tr.b i{background:var(--fg)}
+.split .ln em{font-style:normal;text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)}
+
+textarea{width:100%;min-height:130px;font-family:var(--sans);font-size:14px;font-weight:300;line-height:1.6;padding:12px;border:1px solid var(--line);border-radius:3px;background:var(--bg);color:var(--fg);resize:vertical}
+.prompt{max-width:62ch;margin-bottom:12px}
+.saved{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:6px;min-height:16px}
+.read{border-top:1px solid var(--line);padding-top:14px;margin-top:12px}
+.read .t{font-family:var(--mono);font-size:14px}
+.read .a{font-size:13px;color:var(--muted)}
+.src{font-size:13px;display:grid;gap:4px}
+.btn{font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;padding:12px 18px;border:1px solid var(--fg);background:var(--bg);color:var(--fg);border-radius:99px;cursor:pointer}
+.btn.on{background:var(--fg);color:var(--bg)}
+.endrow{margin-top:44px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.ghost{font-family:var(--mono);font-size:12px;background:none;border:0;color:var(--muted);cursor:pointer;padding:0;text-align:left}
+.ghost:hover{color:var(--fg)}
+
+/* profile */
+.thesis{font-family:var(--mono);font-size:clamp(20px,4vw,28px);line-height:1.3;letter-spacing:-.01em;max-width:30ch;margin:8px 0 14px;text-wrap:balance}
+.pair{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:28px}
+.item{border-top:1px solid var(--line);padding-top:12px}
+.item .h{font-family:var(--mono);font-size:13px;margin-bottom:4px}
+.item .d{color:var(--muted);font-size:14px}
+.item .e{font-family:var(--mono);font-size:11px;color:var(--accent);margin-top:6px}
+.horizon{display:grid;grid-template-columns:120px 1fr;gap:16px;padding:16px 0;border-bottom:1px solid var(--line)}
+.horizon .w{font-family:var(--mono);font-size:12px;color:var(--muted)}
+@media (max-width:560px){.horizon{grid-template-columns:1fr;gap:4px}}
+
+/* radar */
+.radarwrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px;align-items:center}
+@media (max-width:640px){.radarwrap{grid-template-columns:1fr}}
+.radar svg{width:100%;max-width:380px;display:block;margin:0 auto}
+.sl{display:grid;gap:2px;padding:8px 0;border-bottom:1px solid var(--line)}
+.sl .top{display:flex;justify-content:space-between;font-family:var(--mono);font-size:12px}
+.sl .top b{font-weight:400;font-variant-numeric:tabular-nums}
+.legend{display:flex;gap:18px;font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:10px;justify-content:center;flex-wrap:wrap}
+.legend i{display:inline-block;width:14px;height:2px;vertical-align:middle;margin-right:6px}
+
+/* cases */
+.case{padding-block:28px;border-bottom:1px solid var(--line)}
+.case .sit{font-size:16px;max-width:60ch;margin:6px 0 16px}
+.opts{display:grid;gap:8px}
+.opt{text-align:left;font:inherit;font-weight:300;font-size:14px;padding:14px 16px;border:1px solid var(--line);border-radius:4px;background:var(--bg);color:var(--fg);cursor:pointer;display:grid;grid-template-columns:22px 1fr;gap:8px}
+.opt:hover:not(:disabled){border-color:var(--fg)}
+.opt .k{font-family:var(--mono);color:var(--muted)}
+.opt:disabled{cursor:default}
+.opt.pick.s2{border-color:var(--ok)} .opt.pick.s1{border-color:var(--warn)} .opt.pick.s0{border-color:var(--bad)}
+.fb{margin-top:12px;padding:14px 16px;background:var(--soft);border-radius:4px;font-size:14px;max-width:64ch}
+.fb .v{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px}
+.v.s2{color:var(--ok)} .v.s1{color:var(--warn)} .v.s0{color:var(--bad)}
+.score{font-family:var(--mono);font-size:13px;color:var(--muted)}
+
+/* sim */
+.simstate{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:14px;padding:18px 0;border-top:1px solid var(--fg);border-bottom:1px solid var(--line)}
+.simstate div span{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.simstate div b{font-family:var(--mono);font-weight:400;font-size:18px;font-variant-numeric:tabular-nums}
+.simstate div b.neg{color:var(--bad)}
+.qdots{display:flex;gap:6px;margin:18px 0 6px}
+.qdots i{flex:1;height:3px;background:var(--line);border-radius:2px}
+.qdots i.on{background:var(--accent)}
+.log{display:grid;gap:0;margin-top:8px}
+.log div{display:grid;grid-template-columns:70px 1fr 80px;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);font-size:13px}
+.log div span:first-child{font-family:var(--mono);color:var(--muted)}
+.log div span:last-child{font-family:var(--mono);text-align:right;font-variant-numeric:tabular-nums}
+
+/* kpi */
+.kpi{display:grid;grid-template-columns:1fr 92px 92px 74px;gap:12px;align-items:center;padding:14px 0;border-bottom:1px solid var(--line)}
+.kpi .n{font-family:var(--mono);font-size:13px}
+.kpi .h{font-size:12px;color:var(--muted)}
+.kpi input{padding:7px 8px;font-size:13px}
+.kpihead{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--fg);padding:8px 0}
+@media (max-width:560px){
+  .kpi{grid-template-columns:1fr 1fr 74px}
+  .kpi>div:first-child{grid-column:1/-1}
+  .kpihead>span:first-child{display:none}
+  .row{grid-template-columns:36px 1fr}
+  .row .chip{grid-column:2;justify-self:start}
+  .tool{padding:18px}
+  .split .ln{grid-template-columns:96px 1fr 48px}
+  .log div{grid-template-columns:56px 1fr 64px}
+}
+footer{margin-top:80px;font-family:var(--mono);font-size:12px;color:var(--muted);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Programa de preparación · Jay → Gerente General · v2 · octubre 2026</div>
+    <h1>Programa GM<br>Coresolutions</h1>
+    <p class="lede">Un MBA aplicado a tu caso: quién eres, a dónde vas y todo lo que necesitas dominar para dirigir Coresolutions. 6 bloques, 32 módulos, 12 meses, un simulador y casos reales de Ecuador.</p>
+    <div class="bar"><i id="pbar" style="width:0"></i></div>
+    <div class="barlabel"><span id="plabel">0 de 32 módulos</span><span id="pcase">Casos 0/8</span></div>
+  </header>
+
+  <nav role="tablist" id="tabs">
+    <button role="tab" data-v="perfil" aria-selected="true">Perfil</button>
+    <button role="tab" data-v="radar" aria-selected="false">Radar</button>
+    <button role="tab" data-v="plan" aria-selected="false">Plan</button>
+    <button role="tab" data-v="sim" aria-selected="false">Simulador</button>
+    <button role="tab" data-v="casos" aria-selected="false">Casos</button>
+    <button role="tab" data-v="tablero" aria-selected="false">Tablero</button>
+  </nav>
+
+  <main id="view"></main>
+
+  <footer><span>Tu progreso y respuestas se guardan en este navegador. Datos de Ecuador verificados en octubre 2026.</span><span>simple.</span></footer>
+</div>
+
+<script>
+const fmt=n=>isFinite(n)?Math.round(n).toLocaleString('es-EC'):'—';
+const usd=n=>isFinite(n)?(n<0?'−$':'$')+fmt(Math.abs(n)):'—';
+const pct=n=>isFinite(n)?(Math.round(n*10)/10).toLocaleString('es-EC')+'%':'—';
+const dec=(n,d=2)=>isFinite(n)?(Math.round(n*10**d)/10**d).toLocaleString('es-EC'):'—';
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ---------- state ---------- */
+const KEY='programa-gm-v2';
+let S={done:{},notes:{},cases:{},kpi:{},tools:{},radar:[],sim:null};
+try{const r=localStorage.getItem(KEY);if(r)S=Object.assign(S,JSON.parse(r))}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+
+/* ---------- sources ---------- */
+const SRC={
+bce:['Banco Central eleva a 2,7% la previsión 2026 — Primicias','https://www.primicias.ec/economia/banco-central-ecuador-prevision-crecimiento-2026-efecto-fenomeno-nino-132675/'],
+rp:['Riesgo país sube a 496 puntos — Primicias','https://www.primicias.ec/economia/riesgo-pais-ecuador-supe-puntos-renuncia-sariha-moya-ministerio-133699/'],
+rpmin:['Riesgo país cae a 378 puntos — El Universo','https://www.eluniverso.com/noticias/economia/riesgo-pais-sigue-bajando-378-puntos-nuevo-record-banco-central-del-ecuador-2026-nota/?outputType=amp'],
+luz:['Déficit de 1.391 MW en el estiaje — Expreso','https://www.expreso.ec/economia-y-negocios/daniel-noboa-ninguna-familia-ecuatoriana-corte-luz-298166.html'],
+regl:['Reglamento de contratación pública 2026 — Expreso','https://www.expreso.ec/economia-y-negocios/reglamento-ley-contratacion-publica-2026-cambia-proveedores-291077.html'],
+sercop:['Así cambia el sistema de contratación del Estado — El Diario','https://www.eldiario.ec/ecuador/ia-controles-y-nuevas-obligaciones-asi-cambia-el-sistema-de-contratacion-del-estado-31072026/'],
+spdp:['Primeras sanciones de la SPDP — Compliance Latam','https://compliancelatam.legal/ecuador-primeras-sanciones-de-la-superintendencia-de-proteccion-de-datos-personales/'],
+iva:['IVA se mantiene en 15% en 2026 — El Diario','https://www.eldiario.ec/ecuador/iva-ecuador-15-por-ciento-2026-29122025/']
+};
+
+/* ---------- blocks & modules ---------- */
+const B=[
+{id:'b1',t:'Tú: de PM a gerente',m:'Oct – Nov 2026',d:'El cambio empieza en ti: qué haces con tu tiempo, cómo decides y cómo comunicas.'},
+{id:'b2',t:'Fundamentos de negocio',m:'Nov 2026 – Feb 2027',d:'El núcleo de cualquier MBA: contabilidad, caja, inversiones, presupuesto, precios y valor.'},
+{id:'b3',t:'Ecuador',m:'Feb – Mar 2027',d:'La economía, las leyes y el mercado donde opera Coresolutions. Con datos actuales.'},
+{id:'b4',t:'La industria tecnológica',m:'Abr 2027',d:'Cómo se gana dinero en TI, hacia dónde va el sector y qué modelo le conviene a Coresolutions.'},
+{id:'b5',t:'Dirigir la empresa',m:'May – Ago 2027',d:'Estrategia, ventas, marca, operaciones, personas, negociación, cambio, sucesión, crecimiento e IA.'},
+{id:'b6',t:'Integración',m:'Sep 2027',d:'Tu sistema de gestión y el plan de gerencia que presentarás a los accionistas.'}
+];
+
+const M=[
+/* B1 */
+{id:'transicion',b:'b1',t:'De PM a gerente general',s:'Qué cambia en el cargo',
+why:'El cargo no es una versión más grande de lo que haces hoy. Cambia qué produces, con quién pasas el tiempo y cómo te miden.',
+c:[['Qué produces','Como PM produces proyectos entregados. Como gerente produces una empresa que funciona: decisiones, personas y caja.'],
+['Con quién pasas el tiempo','Menos con ingenieros. Más con clientes clave, fabricantes, accionistas y tu equipo directivo.'],
+['Cómo te miden','Por utilidad, caja, crecimiento y salud del equipo. No por cuánto trabajo haces tú.'],
+['Los primeros 90 días','Aprender, conseguir victorias tempranas visibles, alinear con los accionistas y armar tu equipo. Ese periodo define cómo te ven.']],
+core:['Hoy eres quien resuelve y construye. Eso te trajo hasta aquí y es justo lo que tienes que soltar.','Define con los accionistas qué significa éxito en tu primer año, en números.','Empieza la transición antes del cargo: asume una responsabilidad de gerente cada trimestre (presupuesto, comité comercial, relación con un fabricante).'],
+ex:'Escribe tu plan de 90 días como gerente: qué aprenderás, con quién hablarás en las primeras 2 semanas, 3 victorias tempranas y qué dejarás de hacer.',
+read:[['The First 90 Days','Michael Watkins','El método estándar para asumir un cargo nuevo de dirección.']]},
+
+{id:'foco',b:'b1',t:'Foco y energía',s:'Tu riesgo principal es la dispersión',
+why:'Tu mayor riesgo no es la falta de capacidad. Es tener demasiados frentes abiertos al mismo tiempo.',
+c:[['Portafolio personal','Trabajo, marca, apps propias, música, idiomas, entrenamiento, familia. Todo compite por las mismas horas.'],
+['Esencialismo','Hacer menos cosas, mejor. Cada sí es un no a otra cosa, aunque no lo digas.'],
+['Energía, no solo tiempo','Las decisiones difíciles salen mejor descansado. Entrenar y dormir es parte del trabajo de gerente.'],
+['Agenda por diseño','Bloques fijos para pensar, para el equipo y para clientes. Lo urgente llena el resto.']],
+core:['Haz inventario de todos tus proyectos activos, personales y de trabajo. Si son más de 7, algo tiene que pausarse.','ANKLA, @jaywrkr y tus apps tienen valor. Dales un horario fijo para que no compitan con la gerencia.','Construir con IA es tu superpoder y tu distracción favorita. Antes de construir, pregunta: ¿esto lo debería hacer yo?'],
+ex:'Lista todos tus proyectos activos. Marca cada uno: seguir, pausar 6 meses o delegar. Escribe tu semana tipo con bloques fijos.',
+read:[['Essentialism','Greg McKeown','Cómo elegir lo esencial y decir no sin culpa.']]},
+
+{id:'decisiones',b:'b1',t:'Decisiones bajo incertidumbre',s:'Decidir bien sin tener toda la información',
+why:'El gerente casi nunca tiene toda la información. Su trabajo es decidir bien igual.',
+c:[['Reversibles e irreversibles','Las reversibles se deciden rápido y abajo. Las irreversibles (contratar, firmar, invertir fuerte) se piensan.'],
+['Pensar en probabilidades','Una buena decisión puede tener un mal resultado por azar. Juzga la decisión por la información que tenías.'],
+['Pre-mortem','Antes de decidir, imagina que salió mal dentro de un año y escribe por qué. Aparecen riesgos que el entusiasmo esconde.'],
+['Segundo orden','Qué pasa después de lo que pasa. Un descuento hoy enseña al cliente a esperar descuentos.']],
+core:['Lleva un diario de decisiones grandes: qué decidiste, por qué y qué esperabas. Revísalo cada trimestre.','Haz un pre-mortem antes de toda oferta pública grande y de toda contratación senior.','Escribe qué decisiones toma cada persona del equipo sin consultarte.'],
+ex:'Elige una decisión grande pendiente. Escribe opciones, pre-mortem de la favorita, si es reversible y tu decisión.',
+read:[['Thinking in Bets','Annie Duke','Decidir como un jugador de póker: probabilidades, no certezas.']]},
+
+{id:'comunicacion',b:'b1',t:'Comunicación de gerente',s:'Dirigir con palabras',
+why:'Un gerente dirige con memos, reuniones y conversaciones. Si no es claro, el equipo adivina.',
+c:[['Primero la conclusión','Recomendación, luego razones, luego detalle. El principio de la pirámide.'],
+['Memo de una página','Situación, problema, opciones, recomendación y pedido. Obliga a pensar antes de hablar.'],
+['Tres audiencias','Accionistas quieren riesgo y retorno. El equipo quiere dirección y reconocimiento. Los clientes quieren resultados.'],
+['Repetir','La prioridad se repite hasta que el equipo la diga sin ti.']],
+core:['Tu formación en diseño es ventaja: una página bien diseñada decide más rápido que diez diapositivas.','Envía un memo mensual al equipo: números, prioridades y reconocimientos.','Prepara cada reunión con accionistas con una sola pregunta: qué decisión necesito de ellos.'],
+ex:'Escribe un memo de una página a los accionistas proponiendo una decisión real, por ejemplo invertir en la línea de IA.',
+read:[['The Pyramid Principle','Barbara Minto','Cómo estructurar lo que escribes para que se entienda y se decida.']]},
+
+/* B2 */
+{id:'contabilidad',b:'b2',t:'Contabilidad para decidir',s:'Balance, resultados y flujo',
+why:'El balance dice cuánto tiene y cuánto debe la empresa. El estado de resultados dice si gana. El flujo dice si sobrevive. Necesitas leer los tres.',
+c:[['Balance general','Activos = pasivos + patrimonio. Lo que la empresa tiene, lo que debe y lo que es de los accionistas.'],
+['Estado de resultados','Ventas − costos − gastos = utilidad, en un periodo.'],
+['Flujo de efectivo','Operativo, de inversión y de financiamiento. Explica por qué la utilidad no es igual a la caja.'],
+['Cuatro indicadores','Liquidez corriente, endeudamiento, días de cobro y días de pago. Resumen la salud de la empresa.']],
+core:['Pide los estados financieros de los últimos 3 años y léelos con el contador hasta entender cada línea.','En Coresolutions hay facturas sin vínculo claro a proyectos o servicios. Sin esa conexión no sabes qué es rentable.','Calcula los días de cobro por tipo de cliente: público, financiero y privado.'],
+tool:'ratios',
+ex:'Con los estados financieros reales, calcula los 4 indicadores para los últimos 3 años. Escribe qué cambió y por qué.',
+read:[['Financial Intelligence','Karen Berman y Joe Knight','Finanzas para gerentes que no son contadores.']]},
+
+{id:'caja',b:'b2',t:'Caja y capital de trabajo',s:'Rentable no es lo mismo que solvente',
+why:'Las empresas de integración rara vez quiebran por falta de ventas. Quiebran por falta de caja.',
+c:[['Ciclo de caja','Días de inventario + días de cobro − días de pago. Cuántos días tu dinero está fuera de la empresa.'],
+['Capital de trabajo','Lo que necesitas financiar para operar. Crece cuando vendes más, aunque vendas bien.'],
+['Fuentes','Anticipos, plazo con mayoristas, líneas de crédito, factoring. Se negocian antes de necesitarlas.'],
+['Proyección de 13 semanas','Entradas y salidas semana a semana. La usan las empresas en crisis y las que no quieren llegar a una.']],
+core:['Desde julio de 2026 el Estado tiene hasta dos meses para pagar desde que se cumplen los requisitos. Antes eran 30 días. Cada proyecto público necesita más capital de trabajo.','Los contratos públicos de $1 millón o más aportan 0,4% de cada factura neta. Va en el precio.','Ten una línea de crédito aprobada cuando no la necesitas.'],
+tool:'cash',
+ex:'Arma una proyección de caja de 13 semanas para Coresolutions con cobros y pagos reales.',
+read:[['Scaling Up','Verne Harnish','El capítulo de caja: las palancas para liberar dinero atrapado.']],
+src:['regl']},
+
+{id:'inversion',b:'b2',t:'Evaluar inversiones',s:'VAN, TIR y payback',
+why:'Contratar, comprar GPUs, abrir oficina o comprar cartera: todo es inversión. Se evalúa con el mismo método.',
+c:[['Valor del dinero en el tiempo','Un dólar hoy vale más que un dólar en un año. Por eso los flujos futuros se descuentan.'],
+['VAN','Flujos futuros descontados menos la inversión. Si es positivo, crea valor.'],
+['TIR','La tasa de retorno del proyecto. Se compara con lo que cuesta tu dinero.'],
+['Payback','Cuánto tardas en recuperar lo invertido. Clave cuando la caja es limitada.']],
+core:['IA on-premise: compara GPUs propias contra arrendar capacidad o revender una plataforma como ChatGPT Enterprise.','En Ecuador la tasa de descuento es alta: el costo del crédito y el riesgo país la empujan hacia arriba.','Contratar un ingeniero senior es una inversión con payback. Calcúlalo antes de abrir la vacante.'],
+tool:'van',
+ex:'Evalúa una inversión real (laboratorio de IA, nuevo ingeniero, una herramienta) con VAN, TIR y payback a 4 años.',
+read:[['Corporate Finance Essentials','IESE Business School (curso en Coursera)','Finanzas corporativas con casos, en pocas semanas.']]},
+
+{id:'presupuesto',b:'b2',t:'Presupuesto y plan anual',s:'La estrategia en números',
+why:'El presupuesto es la estrategia traducida a números. Sin él, cada gasto se discute desde cero.',
+c:[['Hacia atrás','Meta de utilidad → utilidad bruta necesaria → ventas por línea → pipeline necesario.'],
+['Gasto fijo','Nómina, oficina, sistemas. Se aprueba una vez al año, no caso por caso.'],
+['Escenarios','Base, pesimista y optimista. Qué haces si se cumple el pesimista.'],
+['Revisión mensual','Real contra presupuesto. Las diferencias grandes se explican por escrito.']],
+core:['Arma el presupuesto 2027 de Coresolutions como tu primer entregable de gerente, aunque todavía no lo seas.','Incluye un escenario El Niño 2027: el Banco Central estima que podría restar entre 0,5 y 1,4 puntos al crecimiento.','Asigna presupuesto propio a la apuesta de IA, separado del negocio actual.'],
+ex:'Presupuesto 2027 en una página: ventas y utilidad bruta por línea, gasto fijo, utilidad operativa y tres escenarios.',
+read:[['Profit First','Mike Michalowicz','Un sistema simple para proteger utilidad y caja desde cada cobro.']],
+src:['bce']},
+
+{id:'precios',b:'b2',t:'Precios y márgenes',s:'La palanca más fuerte de la utilidad',
+why:'El precio es la decisión con más impacto en la utilidad. Un punto de precio vale más que un punto de volumen.',
+c:[['Costo más margen','Costo directo + margen. Seguro, pero deja dinero en la mesa.'],
+['Precio por valor','Cobrar según el resultado para el cliente: horas de caída evitadas, riesgo reducido, multas evitadas.'],
+['Paquetes','Básico, estándar y premium. El cliente decide cuánto compra, no si compra.'],
+['Descuentos','Con 25% de margen, un 10% de descuento obliga a vender 67% más para ganar lo mismo.']],
+core:['Define una política de descuentos con límites por rol.','Cobra por valor en ciberseguridad y continuidad. El cliente compra tranquilidad, no horas.','Mide el margen real de cada proyecto ganado contra el margen de la oferta.'],
+tool:'precio',
+ex:'Elige tu servicio más vendido y diseña tres paquetes con precio, alcance y margen.',
+read:[['Confessions of the Pricing Man','Hermann Simon','Cómo piensan el precio las empresas que más ganan.']]},
+
+{id:'valuacion',b:'b2',t:'Cuánto vale Coresolutions',s:'Trabajar para el valor de la empresa',
+why:'El gerente trabaja para los accionistas, y lo que ellos tienen es el valor de la empresa. Tu trabajo es hacerlo crecer.',
+c:[['EBITDA','Utilidad operativa antes de depreciación y amortización. La base para valorar empresas de servicios.'],
+['Múltiplo','Cuántas veces el EBITDA paga un comprador. Sube con ingreso recurrente, crecimiento y menos dependencia de personas.'],
+['Qué destruye valor','Pocos clientes concentrados, dependencia de un fabricante o de una persona, contabilidad desordenada.'],
+['Qué crea valor','Contratos recurrentes, procesos documentados, equipo que opera sin el dueño, márgenes estables.']],
+core:['20 años de relaciones y la certificación ISO 27001 son activos que no aparecen en el balance.','La palanca más grande que tienes a mano: pasar ingreso de proyectos a contratos recurrentes.','Pregunta a los accionistas su horizonte: crecer, mantener o vender algún día. Cambia las prioridades.'],
+tool:'valor',
+ex:'Estima el valor actual de Coresolutions y escribe 3 acciones que lo suben en 3 años.',
+read:[['Built to Sell','John Warrillow','Cómo una empresa de servicios se vuelve valiosa y deja de depender del dueño.']]},
+
+/* B3 */
+{id:'economia',b:'b3',t:'Economía dolarizada',s:'Por qué te pagan cuando te pagan',
+why:'Ecuador no emite moneda. La liquidez depende de cuántos dólares entran al país. Eso decide cuándo te pagan.',
+c:[['Sin emisión','Los dólares entran por petróleo, exportaciones, remesas, inversión y deuda. Si entran menos, hay menos liquidez.'],
+['El Estado como cliente','El gasto público sigue a la caja fiscal. Cuando el fisco se aprieta, los pagos a proveedores se atrasan.'],
+['Riesgo país','Cuánto le cobran a Ecuador por prestarle. Afecta el crédito y la inversión de tus clientes.'],
+['Indicadores a seguir','Crecimiento, inflación, riesgo país, petróleo, remesas y atrasos del Estado.']],
+core:['El Banco Central subió su previsión de crecimiento 2026 a 2,7%. Consumo de hogares +3,3%, inversión +5,8%, inflación promedio de 2,1% y remesas cercanas a $8.000 millones.','El riesgo país tocó mínimos de más de una década en 2026 y volvió a 496 puntos a fines de septiembre tras cambios en el gabinete económico. Es volátil: no planifiques sobre el mejor mes.','Un fenómeno de El Niño podría restar entre 0,5 y 1,4 puntos al crecimiento de 2027, según el Banco Central.'],
+ex:'Arma tu tablero macro mensual de 6 indicadores y escribe cómo afecta cada uno a Coresolutions.',
+read:[['Programación macroeconómica 2026–2030','Banco Central del Ecuador','El documento oficial con supuestos y proyecciones del país.']],
+src:['bce','rp','rpmin']},
+
+{id:'energia',b:'b3',t:'Energía y continuidad',s:'Riesgo operativo y oportunidad comercial',
+why:'La crisis eléctrica es un riesgo para tu operación y una oportunidad para tu oferta.',
+c:[['El déficit','Para el estiaje se estima un déficit de hasta 1.391 MW, con las semanas más críticas entre octubre de 2026 y comienzos de 2027.'],
+['Quién paga primero','Para proteger el consumo residencial, 185 grandes consumidores enfrentan desconexiones de 24 a 48 horas o más.'],
+['Dependencias','Evitar cortes depende de lluvias, embalses como Mazar y Coca Codo, barcazas y nuevas térmicas previstas hacia abril de 2027.'],
+['Continuidad de negocio','Respaldo eléctrico, sitio alterno, replicación y pruebas de arranque. Lo que una empresa necesita para operar con cortes.']],
+core:['Tu proyecto de datacenter con sitio de contingencia, replicación y pruebas de arranque es exactamente lo que estas empresas necesitan. Conviértelo en oferta.','Lista tus clientes industriales y financieros expuestos a cortes. Ofréceles una evaluación de continuidad.','Revisa tu propia continuidad: oficinas, cloud propio y monitoreo.'],
+ex:'Diseña una oferta de "Evaluación de continuidad ante cortes": alcance, precio, entregable y 10 clientes objetivo.',
+read:[['Disaster Recovery Planning','Jon William Toigo','Base técnica y de negocio para vender continuidad.']],
+src:['luz']},
+
+{id:'compras',b:'b3',t:'Contratación pública 2026',s:'Las reglas cambiaron en julio',
+why:'Una parte grande de tus clientes es pública. El reglamento cambió el 30 de julio de 2026 con el Decreto 461.',
+c:[['Plazo de pago','El Estado tiene hasta dos meses para pagar desde que se cumplen los requisitos. Antes eran 30 días.'],
+['Contribución','Contratos de $1 millón o más aportan 0,4% de cada factura neta. El SERCOP puede subirlo hasta 0,5%.'],
+['RUP','La habilitación se revisa en la apertura, antes de adjudicar y al firmar. Los cambios de datos se actualizan en 10 días.'],
+['Experiencia','Las entidades ya no pueden exigir experiencia limitada a una marca, geografía o especificación exacta.']],
+core:['Experiencia sin marca específica significa más competidores en cada proceso. Tu ventaja tiene que estar en la propuesta técnica y el servicio.','Nombra un responsable del RUP con revisión mensual. Perder la habilitación al firmar es perder el contrato.','Actualiza tu modelo de precio público: cobro más largo y contribución de 0,4%.'],
+ex:'Revisa las últimas 5 ofertas públicas: cuánto tardó el cobro real, qué margen quedó y qué cambia con las reglas nuevas.',
+read:[['Reglamento General a la LOSNCP','SERCOP','Lee las reformas completas. Es tu terreno de juego.']],
+src:['regl','sercop']},
+
+{id:'legal',b:'b3',t:'Marco legal, contratos y riesgo',s:'Proteger la utilidad que ya ganaste',
+why:'Un contrato mal firmado o una sanción regulatoria puede borrar la utilidad de un año.',
+c:[['Compañía','La empresa responde ante la Superintendencia de Compañías: juntas de accionistas, actas y nombramientos.'],
+['Laboral','15% de utilidades para los trabajadores, décimos y aportes al IESS. Es parte del costo real de cada persona.'],
+['Tributario','IVA 15% en 2026, retenciones en la fuente que afectan tu caja e impuesto a la renta.'],
+['Datos personales','La Superintendencia de Protección de Datos ya sanciona: multas de $259.644 a LigaPro y $194.856 a la FEF por consentimiento inválido.']],
+core:['La protección de datos es oportunidad: clientes financieros y de salud tienen que cumplirla. Ciberseguridad más cumplimiento es una oferta.','Revisa tus contratos: alcance, aceptación, multas y límite de responsabilidad.','Hay 35 servicios con horas de soporte excedidas. Es trabajo sin cobrar o un conflicto contractual esperando.'],
+ex:'Registro de los 10 riesgos principales de Coresolutions: probabilidad, impacto, responsable y acción.',
+read:[['The Hard Thing About Hard Things','Ben Horowitz','Decisiones difíciles cuando no hay respuesta correcta.']],
+src:['spdp','iva']},
+
+{id:'mercado',b:'b3',t:'Mapa del mercado ecuatoriano',s:'A quién vendes y contra quién compites',
+why:'Saber a quién le vendes, quién regula a tus clientes y contra quién compites.',
+c:[['Financiero','Bancos y cooperativas, regulados por la Superintendencia de Bancos y la SEPS. La regulación de seguridad empuja la demanda.'],
+['Eléctrico y público','Distribuidoras, empresas municipales y ministerios. Dependen de contratación pública y presupuesto fiscal.'],
+['Educación y salud','Universidades y hospitales: datos sensibles, presupuestos ajustados, proyectos de cómputo e IA.'],
+['Industria','Manufactura y comercio: continuidad operativa, energía y costos.']],
+core:['Tu base ya cubre todos: Banco de Loja, Jardín Azuayo, COOPMEGO, CENTROSUR, EERSSA, ETAPA, Universidad de Cuenca, UDA, SOLCA, CARTOPEL, Indurama.','El Austro es tu fortaleza. Guayaquil y Quito son el crecimiento.','Arma el mapa de competidores con lo que sabes de cada licitación perdida.'],
+ex:'Mapa: 5 sectores con clientes actuales, potenciales y competidores. Marca dónde ganas y dónde pierdes.',
+read:[['Las cinco fuerzas competitivas','Michael Porter (artículo HBR)','La herramienta clásica para entender la rentabilidad de un sector.']]},
+
+/* B4 */
+{id:'canal',b:'b4',t:'La cadena del canal TI',s:'Fabricante, mayorista, integrador',
+why:'Coresolutions vive de alianzas con IBM, Lenovo, VMware, Veeam, Check Point, HPE, Aruba y Synology. Gestionarlas bien es margen directo.',
+c:[['La cadena','El fabricante vende al mayorista, el mayorista al integrador, el integrador al cliente. Cada eslabón toma margen.'],
+['Nivel de partner','Define descuentos, soporte y acceso a oportunidades. Depende de certificaciones y volumen.'],
+['Registro de oportunidades e incentivos','Registrar temprano protege tu margen. Rebates y fondos de marketing son dinero que muchos no piden.'],
+['Concentración','Si una marca supera el 40% de tu utilidad bruta, es un riesgo para la empresa.']],
+core:['Ordena los fabricantes por utilidad bruta, no por venta.','Plan anual con los 3 principales: metas, certificaciones, fondos y acciones conjuntas.','Tu plan de certificaciones VCF y los eventos con fabricantes son activos de negociación. Úsalos.'],
+ex:'Para cada fabricante: utilidad bruta anual aproximada, nivel de partner, certificaciones y un pedido concreto para el próximo trimestre.',
+read:[['Programas de partner','IBM, Broadcom, Lenovo','Lee completos los programas vigentes. Ahí está el dinero que no estás cobrando.']]},
+
+{id:'modelos',b:'b4',t:'Modelos de negocio en TI',s:'VAR, MSP, MSSP, consultora',
+why:'Cada modelo tiene otra economía. Coresolutions hoy es una mezcla. El gerente decide hacia dónde se mueve.',
+c:[['VAR','Revende hardware y licencias con implementación. Volumen alto, margen bajo, ciclos de renovación.'],
+['MSP','Opera la infraestructura del cliente por una tarifa mensual. Margen y estabilidad altos, exige procesos maduros.'],
+['MSSP','MSP especializado en seguridad: monitoreo, respuesta y cumplimiento.'],
+['Consultora','Vende conocimiento: arquitectura, diagnóstico, estrategia. Margen alto, depende de personas clave.']],
+core:['Tu plataforma de monitoreo multi-cliente (Terraform, Ansible, Prometheus, Grafana) es la base técnica de un MSP. Falta convertirla en oferta con contrato.','Check Point, monitoreo e ISO 27001 son la base de un servicio de seguridad gestionada.','Define qué porcentaje de utilidad quieres de cada modelo en 3 años.'],
+ex:'Mezcla actual y mezcla objetivo en 3 años por modelo. Qué capacidades faltan para llegar.',
+read:[['Managed Services in a Month','Karl Palachuk','Cómo pasar de proyectos a servicios gestionados, paso a paso.']]},
+
+{id:'recurrente',b:'b4',t:'Ingresos recurrentes',s:'De proyectos a contratos mensuales',
+why:'Un proyecto se cobra una vez. Un servicio se cobra cada mes. La recurrencia da estabilidad y aumenta el valor de la empresa.',
+c:[['MRR y ARR','Ingreso recurrente mensual y anual. Lo que más mira quien valora una empresa de servicios.'],
+['Churn','Porcentaje de ingreso recurrente que pierdes cada mes. 2% mensual es perder casi un cuarto al año.'],
+['Retención neta','Si los clientes que se quedan compran más, creces sin clientes nuevos.'],
+['Productizar','Servicio con nombre, alcance fijo, precio fijo y entregable estándar. Se vende y se entrega igual siempre.']],
+core:['El informe mensual de Quski ya es un servicio productizado. Repite el modelo con otros clientes.','Cada implementación debe cerrar con una oferta de servicio continuo: monitoreo, soporte, backup gestionado, seguridad gestionada.','CoreAI Adoption y CoreAI Managed deben tener precio mensual.'],
+tool:'recur',
+ex:'Diseña un servicio recurrente: nombre, qué incluye, qué no, precio mensual, entregable mensual y 5 clientes actuales a quienes ofrecérselo.',
+read:[['The Automatic Customer','John Warrillow','Modelos de suscripción para empresas de servicios.']]},
+
+{id:'tendencias',b:'b4',t:'Tendencias 2026–2030',s:'Lo que cambia tu negocio en 3 años',
+why:'Las tendencias no son noticias. Son líneas de negocio que se abren o se cierran.',
+c:[['Consolidación de fabricantes','Broadcom con VMware mostró que un cambio de licencias puede mover toda una base instalada.'],
+['Nube híbrida y repatriación','Empresas que traen cargas de la nube pública a infraestructura propia por costo o soberanía. La Universidad de Cuenca busca hacerlo con sus servicios de IA.'],
+['IA empresarial','Dos caminos: plataformas como ChatGPT Enterprise y cómputo propio con GPUs. Los clientes necesitan ayuda en ambos.'],
+['Seguridad por regulación','Protección de datos y normas sectoriales convierten la seguridad en obligación.']],
+core:['CoreAI y la IA on-premise cubren los dos caminos de IA. Pocos integradores del país tienen ambos.','Cada tendencia es una línea de servicio posible. Elige dos para 2027.','Mantén un radar trimestral: qué cambió y qué significa para Coresolutions.'],
+ex:'Para cada tendencia: impacto en el negocio actual, oportunidad, qué necesitas y si apuestas o no en 2027.',
+read:[['The Innovator\'s Dilemma','Clayton Christensen','Por qué las empresas líderes pierden ante tecnologías nuevas.']]},
+
+/* B5 */
+{id:'estrategia',b:'b5',t:'Estrategia',s:'Dónde jugar, cómo ganar, qué dejar',
+why:'Estrategia es elegir qué no hacer. Una empresa con 20 años y muchas marcas corre el riesgo de hacer de todo un poco.',
+c:[['Diagnóstico, política, acciones','Qué está pasando, cómo vas a responder y qué acciones siguen. Sin diagnóstico es una lista de deseos.'],
+['Dónde jugar','Qué clientes, sectores y servicios. Decirlo obliga a decir también dónde no.'],
+['Cómo ganar','Por qué un cliente te elige a ti y no a otro integrador con las mismas marcas.'],
+['Tres horizontes','El negocio de hoy (infraestructura), el que crece (seguridad, servicios gestionados) y el que viene (IA).']],
+core:['Responde: ¿Coresolutions es un revendedor con servicios o una empresa de servicios que también vende producto?','Decide qué línea reducir. Cerrar compromisos poco rentables, como hiciste con SARA, es estrategia.','La IA es el horizonte 3. Necesita responsable, presupuesto y métrica.'],
+ex:'Estrategia en una página: diagnóstico (3 líneas), política guía (1 línea), 3 acciones para 12 meses y 2 cosas que se dejan de hacer.',
+read:[['Good Strategy Bad Strategy','Richard Rumelt','Distingue estrategia real de objetivos decorados.'],['Playing to Win','A.G. Lafley y Roger Martin','El marco de dónde jugar y cómo ganar.']]},
+
+{id:'ventas',b:'b5',t:'Ventas y cuentas clave',s:'El gerente responde por el número',
+why:'Si el pipeline no alcanza hoy, el próximo trimestre ya está perdido.',
+c:[['Pipeline','Oportunidades abiertas con valor, probabilidad y fecha. Se revisa cada semana.'],
+['Cobertura','Entre 3 y 4 veces la meta en pipeline, según tu tasa de cierre.'],
+['Venta consultiva','Entender el problema del negocio antes de la ficha técnica.'],
+['Cuentas clave','El 20% de clientes que trae la mayor parte de la utilidad necesita un plan propio.']],
+core:['CoreOportunidades es la única fuente de verdad del pipeline. Lo que no está ahí no existe.','Separa público y privado: ciclos, márgenes y riesgos distintos.','Plan de cuenta para los 10 clientes principales: qué tienen, qué vence y qué les falta.'],
+tool:'pipe',
+ex:'Tus 10 clientes principales con utilidad del último año, lo instalado, renovaciones de los próximos 12 meses y la siguiente oportunidad.',
+read:[['SPIN Selling','Neil Rackham','Preguntas para descubrir el problema real antes de proponer.']]},
+
+{id:'marca',b:'b5',t:'Marca y marketing B2B',s:'Lo que dicen de ti cuando no estás',
+why:'En B2B el cliente compra confianza. La marca convierte promesas en evidencia.',
+c:[['Posicionamiento','Una frase: para quién, qué problema resuelves y por qué tú.'],
+['Prueba','Casos de éxito, certificaciones, ISO 27001, referencias.'],
+['Eventos','Relación directa con quienes deciden. Se miden por oportunidades generadas.'],
+['Contenido','Publicar lo que sabes sobre problemas reales. Construye reputación antes de la reunión.']],
+core:['Ya organizas eventos con fabricantes (Veeam Day en Cuenca, IBM, VCF en Loja). Mide cuántas oportunidades sale de cada uno.','Tu oficio de diseño y contenido aplicado a Coresolutions es una ventaja frente a competidores con comunicación genérica.','Publica un caso de éxito por trimestre: CENTROSUR, el datacenter con contingencia, el monitoreo de Quski.'],
+ex:'Posicionamiento de Coresolutions en una frase y plan de 12 meses: 4 eventos, 4 casos de éxito y contenido mensual.',
+read:[['Building a StoryBrand','Donald Miller','Cómo comunicar para que el cliente se vea en tu historia.']]},
+
+{id:'operaciones',b:'b5',t:'Operaciones y entrega',s:'Donde se gana o se pierde el margen',
+why:'Vender bien y entregar mal destruye el margen y la reputación.',
+c:[['Utilización','Porcentaje de horas facturables del equipo. En servicios TI se apunta a 65–80%.'],
+['Control de alcance','Lo que no está escrito se hace gratis. Todo pedido fuera de alcance es un cambio con costo.'],
+['Estandarización','Checklists, plantillas y guías por tipo de implementación.'],
+['Cuellos de botella','El sistema avanza al ritmo del recurso más escaso. A veces es un solo ingeniero.']],
+core:['CorePlanificación, CoreGestión y CoreTrack ya existen. El reto es que todo el equipo los use igual, siempre.','Tickets de capacitación suspendidos por más de 600 días y horas de soporte excedidas son síntomas de falta de control operativo.','En contratos públicos, plazos y multas entran al cronograma desde la oferta.'],
+tool:'util',
+ex:'Último proyecto terminado: horas presupuestadas contra reales, margen previsto contra real y 3 cambios de proceso.',
+read:[['La Meta','Eliyahu Goldratt','Novela sobre cuellos de botella y flujo.']]},
+
+{id:'personas',b:'b5',t:'Personas y cultura',s:'Construir el equipo que resuelve sin ti',
+why:'Como PM resuelves problemas. Como gerente construyes el equipo que los resuelve sin ti.',
+c:[['Apalancamiento','Tu producción es la producción de tu equipo. Tu hora vale por cuánto multiplica el trabajo de otros.'],
+['1:1 semanal','30 minutos con cada persona clave. La agenda la trae la otra persona.'],
+['Delegar según madurez','A quien es nuevo en una tarea le das instrucciones. A quien la domina, solo el resultado esperado.'],
+['Retención','Un ingeniero certificado es el activo más caro de reemplazar. Carrera, aprendizaje y reconocimiento, no solo sueldo.']],
+core:['Haz la lista de lo que hoy solo haces tú. Asigna un responsable a cada cosa en 90 días.','Ata el plan de certificaciones VCF a la carrera y a la venta: cada certificado debe abrir negocio.','Escribe los valores de la empresa como conductas observables.'],
+ex:'Dos columnas: tareas que hago hoy y quién debería hacerlas. Marca las 3 que delegas este mes, con fecha.',
+read:[['High Output Management','Andy Grove','El manual práctico del gerente. Si lees uno solo, este.']]},
+
+{id:'organizacion',b:'b5',t:'Estructura y equipo directivo',s:'Un gerente solo no escala',
+why:'Necesitas un equipo directivo que dirija cada área para que tú dirijas la empresa.',
+c:[['Organigrama por función','Comercial, preventa, implementación, soporte y administración. Cada área con un responsable.'],
+['Roles claros','Qué decide cada uno, qué entrega y cómo se mide. Una hoja por rol.'],
+['Equipo directivo','3 a 5 personas que se reúnen contigo cada semana.'],
+['Compensación','Fijo más variable atado a lo que la persona controla.']],
+core:['Hoy cubres varias funciones. Como gerente no puedes ser también el PM principal.','Christian Flores y Christian Quinde ya asumen responsabilidad técnica. Evalúa quién puede liderar implementación y servicios gestionados.','Diseña el organigrama de 2028, no el de hoy.'],
+ex:'Organigrama actual y organigrama 2028. Qué roles faltan, quién puede crecer y a quién contratar.',
+read:[['Traction','Gino Wickman','Un sistema simple para organizar y operar empresas medianas.']]},
+
+{id:'negociacion',b:'b5',t:'Negociación',s:'Con fabricantes, clientes y tu equipo',
+why:'El gerente negocia todo el día. Prepararse es la diferencia.',
+c:[['Mejor alternativa','Lo que harás si no hay acuerdo. Quien tiene mejor alternativa negocia mejor.'],
+['Intereses, no posiciones','Detrás de "quiero 15% de descuento" hay un interés: presupuesto, aprobación interna, quedar bien.'],
+['Anclaje','La primera cifra sobre la mesa marca la negociación.'],
+['Concesiones','Nada gratis. Lo que das se cambia por plazo, volumen, anticipo o referencia.']],
+core:['Con fabricantes negocia precio especial, fondos y plazo como paquete anual, no caso por caso.','Con clientes públicos el precio es fijo: negocias alcance y cronograma.','Aumentos y roles también son negociaciones. Prepáralas igual.'],
+ex:'Prepara una negociación real: tu alternativa, la del otro, sus intereses, tu ancla y tus 3 concesiones posibles.',
+read:[['Never Split the Difference','Chris Voss','Negociación práctica desde la experiencia de un negociador del FBI.']]},
+
+{id:'cambio',b:'b5',t:'Gestión del cambio',s:'Que el equipo use lo que ya existe',
+why:'Las herramientas internas existen. El problema es que no se usan siempre igual.',
+c:[['Urgencia','Nadie cambia sin razón. Muestra el costo de no cambiar con datos.'],
+['Aliados','Las personas con influencia en el equipo tienen que estar a favor antes del anuncio.'],
+['Victorias tempranas','Resultados visibles en semanas, no en meses.'],
+['Hacerlo fácil','El camino correcto tiene que ser el más corto.']],
+core:['Tickets suspendidos por años y facturas sin vínculo a proyectos son un problema de adopción, no de herramienta.','Un solo hábito de sistema por trimestre. Ejemplo: ningún proyecto se cierra sin postmortem en CoreTrack.','Mide la adopción y publícala al equipo.'],
+ex:'Plan de cambio para un proceso real: urgencia con datos, aliados, victoria temprana en 30 días y cómo medir.',
+read:[['Switch','Chip y Dan Heath','Cómo cambiar cuando el cambio es difícil.']]},
+
+{id:'gobierno',b:'b5',t:'Gobierno corporativo y sucesión',s:'Recibir el cargo con autoridad real',
+why:'Vas a recibir la gerencia de una empresa con 20 años. Cómo se hace esa transición importa tanto como lo que hagas después.',
+c:[['Roles','Los accionistas son dueños, el directorio supervisa, el gerente ejecuta. Mezclar roles genera conflictos.'],
+['Plan de sucesión','Fechas, responsabilidades que se transfieren por etapa y nuevo rol del gerente saliente.'],
+['Acuerdo explícito','Autoridad, límites de aprobación, compensación y metas. Por escrito.'],
+['Informe al directorio','Mensual y corto: números, riesgos y decisiones que necesitas.']],
+core:['Si la transición todavía no tiene fechas ni etapas, propónlas tú.','El riesgo más común: el gerente saliente sigue decidiendo y el nuevo tiene el cargo sin la autoridad.','Separa las conversaciones de rol, compensación y participación accionaria. Cada una tiene su momento.'],
+ex:'Plan de sucesión en 4 etapas con fechas: qué decisiones pasan a ti en cada una y cómo se mide el avance.',
+read:[['Boards That Lead','Ram Charan, Dennis Carey y Michael Useem','Cómo debe funcionar la relación entre directorio y gerente.']]},
+
+{id:'crecimiento',b:'b5',t:'Crecimiento y adquisiciones',s:'Crecer más allá del Austro',
+why:'Crecer es una decisión de capital: dónde pones el dinero y el tiempo de la empresa.',
+c:[['Orgánico','Más clientes, más servicios por cliente, nuevas ciudades.'],
+['Alianzas','Con otras empresas para cubrir capacidades que no tienes.'],
+['Comprar cartera','Contratos de un proveedor pequeño que se retira. Crecimiento recurrente inmediato.'],
+['Due diligence','Antes de comprar: contratos, clientes, personas y deudas. Lo que no revisas, lo pagas.']],
+core:['Crecer en Quito y Guayaquil probablemente rinde más que abrir otro país.','Hay integradores pequeños sin plan de sucesión. Su cartera puede estar disponible.','Paga con estructura: parte al contado, parte atada a que los clientes se queden.'],
+ex:'Tres opciones de crecimiento 2027–2029 con inversión, riesgo y retorno. Elige una y justifícala.',
+read:[['The Outsiders','William Thorndike','Cómo los mejores gerentes deciden dónde poner el capital.']]},
+
+{id:'ia',b:'b5',t:'IA como ventaja de la empresa',s:'Tu diferencia frente a otros gerentes',
+why:'Sabes construir con IA. Úsalo para operar mejor la empresa, no solo para vender.',
+c:[['IA para operar','Informes automáticos, análisis de proyectos, propuestas y seguimiento. Menos horas administrativas.'],
+['IA para vender','CoreAI, IA on-premise, cómputo con GPUs. Líneas nuevas con margen de servicios.'],
+['Reglas de uso','Qué datos se usan, con qué herramientas y quién revisa. Sin reglas, la IA genera riesgo de datos.'],
+['Medir','Horas ahorradas, errores evitados, ingresos nuevos. Si no se mide, es entusiasmo.']],
+core:['El informe mensual de Quski es la prueba: un proceso manual convertido en sistema.','Lleva el mismo enfoque a propuestas, informes de proyecto y control de horas.','No presentes a Coresolutions como revendedor de OpenAI sin respaldo formal.'],
+ex:'5 procesos internos donde la IA ahorraría más horas: horas actuales, herramienta, responsable y meta.',
+read:[['Co-Intelligence','Ethan Mollick','Cómo trabajar y dirigir con IA en la práctica.']]},
+
+/* B6 */
+{id:'ritmo',b:'b6',t:'Ritmo de gestión',s:'El sistema operativo del gerente',
+why:'Un gerente no gestiona con heroísmo. Gestiona con un ritmo fijo de reuniones, números y decisiones.',
+c:[['Semanal','Pipeline, proyectos en riesgo y caja. 60 minutos, siempre el mismo día.'],
+['Mensual','Cierre financiero, indicadores y un solo tema estratégico.'],
+['Trimestral','Estrategia, presupuesto y revisión de personas.'],
+['Una prioridad','Cualquiera del equipo debe poder explicar la prioridad de la empresa en una frase.']],
+core:['Usa el tablero de 10 indicadores. Si no cabe en una pantalla, sobra algo.','Tus apps Glide y automatizaciones pueden alimentar el tablero sin trabajo manual.','Bloquea el ritmo en el calendario antes de llenarlo con todo lo demás.'],
+ex:'Tu semana ideal como gerente: reuniones, día, duración y tiempo libre para pensar.',
+read:[['The Effective Executive','Peter Drucker','Dónde se va tu tiempo y cómo recuperarlo.']]},
+
+{id:'final',b:'b6',t:'Proyecto final: plan de gerencia',s:'Lo que presentarás a los accionistas',
+why:'Todo el programa termina en un documento que podrías presentar a los accionistas mañana.',
+c:[['Tesis','Qué empresa será Coresolutions en 3 años, en un párrafo.'],
+['Números','Presupuesto a 3 años, mezcla de ingresos, caja y valor esperado.'],
+['Organización','Organigrama 2028, equipo directivo y plan de personas.'],
+['Primeros 90 días','Qué haces desde el primer día como gerente.']],
+core:['Usa los entregables de cada módulo. El plan ya está escrito por partes.','Preséntalo primero a un mentor externo, después a los accionistas.','Una versión de 1 página y otra de máximo 10.'],
+ex:'Resumen de una página de tu plan de gerencia.',
+read:[['Good to Great','Jim Collins','Qué hicieron las empresas que dieron el salto y lo sostuvieron.']]}
+];
+
+/* ---------- profile ---------- */
+const P={
+line:'Eres un gerente-constructor: piensas en sistemas, diseñas, construyes con IA y entiendes la tecnología que vendes.',
+hoy:'Ingeniero en telecomunicaciones y diseñador UX/UI formado en el Politecnico di Milano, con 4–5 años viviendo en Italia. Project Manager de Coresolutions, integradora de infraestructura, cloud y ciberseguridad con más de 20 años en Ecuador, base en Cuenca y oficina en Guayaquil. Coordinas proyectos, manejas clientes y ventas, y diriges ingenieros. Fuera de la empresa escribes, creas contenido como @jaywrkr y construyes tus propias apps.',
+fort:[
+['Traduces técnica a negocio','Unes ingeniería, diseño y comunicación. Pocos en el sector hacen las tres cosas.','Roadmap de ciberseguridad de CENTROSUR · defensa de arquitectura en DNTIC'],
+['Construyes sistemas','Conviertes procesos manuales en sistemas que funcionan solos.','Informe mensual de Quski en producción desde mayo 2026 · apps Glide · skills internas'],
+['Piensas en producto','Ves servicios repetibles donde otros ven proyectos sueltos.','Oferta CoreAI (Discovery, Launch, Adoption, Go) · IA on-premise'],
+['Mueves el ecosistema','Generas relación con fabricantes y clientes.','Veeam Day Cuenca · evento IBM · evento VCF en Loja · plan de 10 certificaciones'],
+['Tomas decisiones difíciles','Cortas lo que no rinde aunque incomode.','Propuesta de cerrar la colaboración SARA'],
+['Tienes marca propia','Escribes, diseñas y comunicas con criterio. Es reputación que la empresa puede usar.','@jaywrkr · ANKLA']],
+brec:[
+['Finanzas formales','Balance, flujo, presupuesto e inversiones. El cargo exige leerlos de memoria.','Facturas sin vínculo claro a proyectos o servicios'],
+['Control operativo','Las herramientas existen. Falta que se usen siempre y que alguien lo exija.','Tickets suspendidos por más de 600 días · 35 servicios con horas excedidas'],
+['Foco','Muchos frentes abiertos a la vez, personales y de trabajo.','Contenido, ANKLA, J-Drums, rig VJ, 3 idiomas, varios proyectos internos'],
+['Delegación','Tiendes a construirlo tú. Como gerente tu hora vale por lo que multiplica.','Sistemas clave construidos por ti'],
+['Gobierno y sucesión','Todavía no está claro cómo, cuándo y con qué autoridad recibes el cargo.','Sin plan de transición conocido'],
+['Ventas como sistema','Pipeline, cobertura y planes de cuenta medidos cada semana.','Ventas ligadas a tu relación personal con los clientes']],
+riesgos:['Seguir construyendo herramientas en vez de dirigir la empresa.','Repartir la energía entre demasiados proyectos.','Recibir el cargo sin la autoridad real para ejercerlo.','Cargar con todo y agotarte en el primer año.'],
+hor:[
+['6 meses','Abril 2027','Dominas los números de la empresa. Asumes el presupuesto 2027 y el comité comercial. El plan de sucesión está acordado por escrito.'],
+['18 meses','Abril 2028','Eres gerente con equipo directivo armado. Una parte creciente de la utilidad viene de servicios recurrentes. La IA es una línea con ingresos propios.'],
+['3–5 años','2029–2031','Coresolutions es referente en servicios gestionados, seguridad e IA en Ecuador. Vale más y no depende de una sola persona. Tu reputación pública respalda a la empresa.']],
+falta:['Estructura accionaria y quién decide la sucesión.','Fecha y etapas de la transición al cargo.','Estados financieros de los últimos 3 años.','Utilidad bruta por línea y por cliente.','Organigrama actual y roles de cada persona.']
+};
+
+const R=[['fin','Finanzas'],['est','Estrategia'],['ecu','Ecuador y mercado'],['ven','Ventas y marca'],['ope','Operaciones'],['per','Personas'],['gob','Gobierno y negociación'],['foc','Foco personal']];
+
+/* ---------- cases ---------- */
+const C=[
+{t:'Caja',sit:'Ganaste un proyecto público de $280.000 con hardware y licencias. El mayorista pide pago a 45 días. Con las reglas nuevas, la entidad puede tardar hasta dos meses en pagar después de la recepción. Tu caja disponible es $90.000.',
+o:[['Firmar y resolver la caja después.',0,'La brecha supera tu caja. Un retraso en la recepción y no pagas la nómina.'],
+['Antes de firmar: pedir anticipo, negociar plazo con el mayorista y confirmar una línea de crédito.',2,'El margen no sirve si no hay caja para financiarlo. Esto se resuelve antes de ofertar.'],
+['No volver a participar en proyectos públicos con hardware.',1,'Demasiado conservador. El problema es financiar el proyecto, no el proyecto.']]},
+{t:'Talento',sit:'Tu ingeniero VMware más experimentado, con VCF, recibe una oferta 30% superior. Lleva 3 proyectos críticos.',
+o:[['Igualar el 30% de inmediato.',1,'Lo resuelves hoy y creas un precedente. Si el equipo se entera, abres una negociación con todos.'],
+['1:1 para entender qué busca. Ajuste justo, plan de carrera y rol de líder técnico. Empezar a documentar su conocimiento.',2,'Retienes por razones más sólidas que el dinero y reduces la dependencia de una persona.'],
+['Dejarlo ir. Nadie es indispensable.',0,'En teoría. En la práctica pierdes 3 proyectos, conocimiento y meses de reemplazo.']]},
+{t:'Fabricante',sit:'Por el cambio de licenciamiento de VMware, un cliente importante te pide evaluar alternativas. VMware es una de tus líneas principales.',
+o:[['Defender VMware a toda costa.',0,'El cliente decidirá igual. Si no lo ayudas tú, lo ayudará otro integrador.'],
+['Evaluación honesta de opciones y costos a 3 años. Ofrecer la migración como servicio si conviene.',2,'Ganas confianza y conviertes un riesgo en un proyecto de servicios.'],
+['Recomendar migrar sin evaluar.',1,'Pierdes credibilidad técnica y quizá un ingreso que no hacía falta perder.']]},
+{t:'Rentabilidad',sit:'Un contrato de horas con un cliente internacional tiene baja ocupación. Cubre poco más que su costo y consume tu tiempo de gestión.',
+o:[['Mantenerlo por el nombre del cliente.',1,'El nombre ayuda si lo usas comercialmente. Si no, es costo de oportunidad.'],
+['Cerrarlo de forma ordenada: cumplir lo comprometido, avisar con tiempo y reasignar al recurso.',2,'Cuidas la relación y el margen a la vez.'],
+['Cortarlo de inmediato.',0,'Dañas la relación y la reputación por ahorrar poco.']]},
+{t:'Licitación',sit:'Sale una licitación de $1,2 millones. Para ganar, el precio deja 6% de margen bruto. Hay multas por retraso, garantía del 5% y contribución de 0,4% sobre cada factura.',
+o:[['Participar. El volumen ayuda con el fabricante.',0,'Con 6% de margen, la contribución, una multa o un cobro tardío te dejan en pérdida.'],
+['No participar, o participar con un precio que cubra riesgo y financiamiento, aunque pierdas.',2,'Aprender a perder licitaciones malas es parte del trabajo.'],
+['Participar y recuperar margen con órdenes de cambio.',1,'Arriesgado en sector público: los cambios son limitados y lentos.']]},
+{t:'Tiempo',sit:'Es lunes. Tienes una falla crítica en un cliente, reunión con el gerente de canal de IBM, 1:1 con dos ingenieros y una propuesta que vence el miércoles.',
+o:[['Resuelves la falla tú mismo.',0,'Como PM, sí. Como gerente, tu trabajo es que el equipo la resuelva mientras tú hablas con el cliente.'],
+['Asignas la falla a un responsable y hablas con el cliente. Mantienes IBM y los 1:1. Delegas el borrador de la propuesta y lo revisas el martes.',2,'Cada cosa tiene dueño y tú estás donde solo tú puedes estar.'],
+['Cancelas los 1:1 para ganar tiempo.',1,'Los 1:1 son lo primero que se cancela y lo que más cuesta perder.']]},
+{t:'Sucesión',sit:'Ya tienes el cargo de gerente. El gerente saliente sigue aprobando descuentos y hablando con clientes clave sin avisarte.',
+o:[['Dejarlo pasar por respeto.',0,'El equipo aprende que la autoridad sigue en otro lado. Cada mes es más difícil corregirlo.'],
+['Conversación privada: reconocer su aporte, acordar por escrito qué decisiones son tuyas y cuál es su nuevo rol. Comunicarlo juntos al equipo.',2,'Proteges la relación y la autoridad del cargo al mismo tiempo.'],
+['Corregirlo frente al equipo.',1,'Tienes razón en el fondo y la pierdes en la forma.']]},
+{t:'Datos',sit:'Una cooperativa cliente sufre una filtración de datos en un servidor que ustedes implementaron hace un año. Te preguntan si fue su culpa.',
+o:[['Negar responsabilidad hasta saber más.',1,'Prudente en lo legal, pero la relación se daña si suena a defensa.'],
+['Equipo de respuesta de inmediato, investigar junto al cliente, comunicar hechos y revisar el contrato con asesoría legal antes de admitir algo.',2,'Ayudas primero, decides responsabilidades con hechos y proteges a la empresa.'],
+['Asumir toda la culpa para cuidar la relación.',0,'Puedes cargar con multas y responsabilidades que no te corresponden. Con la protección de datos vigente, eso tiene costo real.']]}
+];
+
+const K=[
+['ub','Utilidad bruta mensual','USD',1,45000,52000],
+['mb','Margen bruto','%',1,24,30],
+['rec','Utilidad bruta recurrente','% del total',1,12,30],
+['caja','Caja disponible','meses de gasto fijo',1,1.8,3],
+['cxc','Cuentas por cobrar > 60 días','USD',-1,140000,60000],
+['cob','Cobertura de pipeline','veces la meta',1,2.1,3],
+['win','Tasa de cierre','%',1,28,30],
+['util','Utilización de ingenieros','%',1,58,70],
+['roj','Proyectos en rojo','número',-1,3,0],
+['rot','Rotación del equipo','% anual',-1,15,10]
+];
+
+/* ---------- tools ---------- */
+const T={
+ratios:{tag:'Herramienta · Salud financiera',f:[['ac','Activo corriente',900000],['pc','Pasivo corriente',600000],['pt','Pasivo total',800000],['pat','Patrimonio',500000],['cxc','Cuentas por cobrar',420000],['vta','Ventas anuales',2400000],['cxp','Cuentas por pagar',280000],['cv','Costo de ventas anual',1800000]],
+calc:v=>{const liq=v.ac/v.pc,end=v.pt/v.pat,dso=v.cxc/v.vta*365,dpo=v.cxp/v.cv*365;
+const s=(ok,t)=>`<em class="chip ${ok?'ok':'warn'}" style="font-style:normal;margin-left:6px">${t}</em>`;
+return `<div class="out"><div><span>Liquidez corriente</span><b>${dec(liq)}</b>${s(liq>=1.5,liq>=1.5?'sano':'ajustado')}</div><div><span>Endeudamiento</span><b>${dec(end)}</b>${s(end<=1.5,end<=1.5?'sano':'alto')}</div><div><span>Días de cobro</span><b>${fmt(dso)}</b></div><div><span>Días de pago</span><b>${fmt(dpo)}</b></div></div>
+<p class="note">Cobras en ${fmt(dso)} días y pagas en ${fmt(dpo)}. ${dso>dpo?`Financias a tus clientes durante ${fmt(dso-dpo)} días con dinero de la empresa.`:'Tus proveedores financian parte de tu operación. Buena posición.'}</p>`}},
+cash:{tag:'Herramienta · Brecha de caja de un proyecto',f:[['monto','Valor del proyecto (USD)',280000],['costo','Costo de producto %',75],['dp','Días para pagar al proveedor',45],['dc','Días para cobrar al cliente',100],['tasa','Costo del dinero % anual',12]],
+calc:v=>{const cap=v.monto*v.costo/100,gap=Math.max(0,v.dc-v.dp),fin=cap*v.tasa/100*gap/365,mg=v.monto-cap,share=mg>0?fin/mg*100:NaN;
+return `<div class="out"><div><span>Capital a financiar</span><b>${usd(cap)}</b></div><div><span>Días de brecha</span><b>${fmt(gap)}</b></div><div><span>Costo financiero</span><b>${usd(fin)}</b></div><div><span>Se come del margen</span><b>${pct(share)}</b></div></div>
+<p class="note">Durante ${fmt(gap)} días tienes ${usd(cap)} fuera de la empresa. Los 100 días de ejemplo suman recepción, trámite y el plazo de hasta dos meses que permite el reglamento 2026.</p>`}},
+van:{tag:'Herramienta · Evaluar una inversión',f:[['inv','Inversión inicial (USD)',120000],['f1','Flujo neto año 1 (USD)',30000],['g','Crecimiento anual del flujo %',20],['n','Años',4],['r','Tasa de descuento %',14]],
+calc:v=>{const n=Math.max(1,Math.min(10,Math.round(v.n)));const fl=[];for(let i=0;i<n;i++)fl.push(v.f1*Math.pow(1+v.g/100,i));
+const npv=r=>fl.reduce((a,f,i)=>a+f/Math.pow(1+r,i+1),0)-v.inv;
+let lo=-0.99,hi=3,irr=NaN;if(npv(lo)*npv(hi)<0){for(let k=0;k<80;k++){const m=(lo+hi)/2;(npv(m)>0)?lo=m:hi=m}irr=(lo+hi)/2*100}
+let acc=0,pb=NaN;for(let i=0;i<n;i++){if(acc+fl[i]>=v.inv){pb=i+(v.inv-acc)/fl[i];break}acc+=fl[i]}
+const val=npv(v.r/100);
+return `<div class="out"><div><span>VAN</span><b>${usd(val)}</b></div><div><span>TIR</span><b>${pct(irr)}</b></div><div><span>Payback</span><b>${isFinite(pb)?dec(pb,1)+' años':'no se recupera'}</b></div></div>
+<p class="note">${val>=0?'Con estos supuestos la inversión crea valor.':'Con estos supuestos la inversión destruye valor.'} Cambia la tasa de descuento: en Ecuador un 14% es razonable, y si el riesgo país sube, la tasa sube con él.</p>`}},
+precio:{tag:'Herramienta · Precio y descuentos',f:[['m','Margen bruto actual %',25],['d','Descuento que piensas dar %',10],['ch','Costo por hora del ingeniero (USD)',18],['h','Horas del servicio',40],['mo','Margen objetivo %',40]],
+calc:v=>{const extra=v.m>v.d?(v.m/(v.m-v.d)-1)*100:NaN;const p=v.ch*v.h/(1-v.mo/100);
+return `<div class="out"><div><span>Volumen extra necesario</span><b>${isFinite(extra)?'+'+pct(extra):'imposible'}</b></div><div><span>Precio del servicio</span><b>${usd(p)}</b></div><div><span>Tarifa por hora</span><b>${usd(p/v.h)}</b></div></div>
+<p class="note">Con ${pct(v.m)} de margen, un descuento de ${pct(v.d)} te obliga a vender ${isFinite(extra)?pct(extra)+' más':'infinitamente más'} para ganar lo mismo. Antes de bajar el precio, ofrece menos alcance.</p>`}},
+valor:{tag:'Herramienta · Valor de la empresa (ilustrativo)',f:[['eb','EBITDA anual (USD)',250000],['rec','% de utilidad que es recurrente',15],['g','Crecimiento anual %',8],['con','% de utilidad del mayor cliente',20],['caja','Caja neta de deuda (USD)',100000]],
+calc:v=>{const mult=x=>Math.max(2,3+Math.min(x,80)/100*5+(v.g>=10?0.5:0)-(v.con>25?0.7:0));
+const m1=mult(v.rec),m2=mult(40),val=v.eb*m1+v.caja,val2=v.eb*m2+v.caja;
+return `<div class="out"><div><span>Múltiplo estimado</span><b>${dec(m1,1)}x</b></div><div><span>Valor estimado</span><b>${usd(val)}</b></div><div><span>Con 40% recurrente</span><b>${usd(val2)}</b></div></div>
+<p class="note">Los múltiplos reales varían mucho según comprador y momento; este modelo solo muestra la dirección. Con el mismo EBITDA, pasar a 40% recurrente suma ${usd(val2-val)} de valor.</p>`}},
+mix:{tag:'Herramienta · Mezcla de ingresos',f:[['r1','Venta reventa (USD/año)',1200000],['m1','Margen reventa %',12],['r2','Venta servicios (USD/año)',400000],['m2','Margen servicios %',40],['r3','Venta recurrente (USD/año)',150000],['m3','Margen recurrente %',55]],
+calc:v=>{const g=[v.r1*v.m1/100,v.r2*v.m2/100,v.r3*v.m3/100];const R=v.r1+v.r2+v.r3,G=g[0]+g[1]+g[2];const L=['Reventa','Servicios','Recurrente'],rv=[v.r1,v.r2,v.r3];
+return `<div class="out"><div><span>Venta total</span><b>${usd(R)}</b></div><div><span>Utilidad bruta</span><b>${usd(G)}</b></div><div><span>Margen promedio</span><b>${pct(G/R*100)}</b></div></div>
+<div class="split">${L.map((l,i)=>`<div class="ln"><span>${l} · venta</span><div class="tr b"><i style="width:${rv[i]/R*100}%"></i></div><em>${pct(rv[i]/R*100)}</em></div><div class="ln"><span>${l} · utilidad</span><div class="tr"><i style="width:${g[i]/G*100}%"></i></div><em>${pct(g[i]/G*100)}</em></div>`).join('')}</div>
+<p class="note">Donde la utilidad pesa más que la venta está el negocio que conviene hacer crecer.</p>`}},
+pipe:{tag:'Herramienta · Pipeline necesario',f:[['meta','Meta de venta anual (USD)',2000000],['win','Tasa de cierre %',25],['tk','Ticket promedio (USD)',60000],['cic','Ciclo de venta (meses)',4]],
+calc:v=>{const p=v.meta/(v.win/100),n=p/v.tk,m=n/12;
+return `<div class="out"><div><span>Pipeline anual necesario</span><b>${usd(p)}</b></div><div><span>Oportunidades al año</span><b>${fmt(n)}</b></div><div><span>Nuevas por mes</span><b>${dec(m,1)}</b></div><div><span>Abiertas siempre</span><b>${fmt(m*v.cic)}</b></div></div>
+<p class="note">Si hoy tienes menos de ${fmt(m*v.cic)} oportunidades calificadas abiertas, el problema de ventas ya existe, aunque el mes se vea bien.</p>`}},
+recur:{tag:'Herramienta · Proyección de ingreso recurrente',f:[['cl','Clientes con servicio',8],['pr','Precio mensual promedio (USD)',1500],['nu','Clientes nuevos por mes',1],['ch','Churn mensual %',1.5]],
+calc:v=>{let c=v.cl;const pts=[];for(let i=0;i<=24;i++){pts.push(c*v.pr);c=c*(1-v.ch/100)+v.nu}
+const mx=Math.max(...pts)*1.1||1,W=600,H=140,x=i=>20+i*(W-40)/24,y=val=>H-20-val/mx*(H-40);
+const d=pts.map((p,i)=>(i?'L':'M')+x(i).toFixed(1)+' '+y(p).toFixed(1)).join(' ');
+return `<div class="out"><div><span>MRR hoy</span><b>${usd(pts[0])}</b></div><div><span>MRR en 24 meses</span><b>${usd(pts[24])}</b></div><div><span>ARR en 24 meses</span><b>${usd(pts[24]*12)}</b></div></div>
+<div style="overflow-x:auto;margin-top:16px"><svg viewBox="0 0 ${W} ${H}" style="width:100%;min-width:320px;display:block" role="img" aria-label="Proyección de MRR a 24 meses">
+<line x1="20" x2="${W-20}" y1="${H-20}" y2="${H-20}" stroke="var(--line)"/>
+<path d="${d} L ${x(24)} ${H-20} L 20 ${H-20} Z" fill="var(--accent-soft)"/>
+<path d="${d}" fill="none" stroke="var(--accent)" stroke-width="1.5"/>
+<circle cx="${x(24)}" cy="${y(pts[24])}" r="3.5" fill="var(--accent)"/>
+<text x="20" y="${H-4}" font-family="Geist Mono,monospace" font-size="10" fill="var(--muted)">hoy</text>
+<text x="${W-20}" y="${H-4}" text-anchor="end" font-family="Geist Mono,monospace" font-size="10" fill="var(--muted)">mes 24</text></svg></div>
+<p class="note">Sube el churn a 3% y mira la curva. Retener vale tanto como vender.</p>`}},
+util:{tag:'Herramienta · Utilización del equipo',f:[['n','Ingenieros',8],['h','Horas al mes por persona',160],['u','Utilización %',60],['ta','Tarifa por hora (USD)',45],['co','Costo mensual por ingeniero (USD)',2200]],
+calc:v=>{const ing=v.n*v.h*v.u/100*v.ta,cost=v.n*v.co,ing10=v.n*v.h*Math.min(100,v.u+10)/100*v.ta;
+return `<div class="out"><div><span>Facturación mensual</span><b>${usd(ing)}</b></div><div><span>Costo del equipo</span><b>${usd(cost)}</b></div><div><span>Margen del equipo</span><b>${usd(ing-cost)}</b></div><div><span>Con +10 puntos</span><b>+${usd(ing10-ing)}</b></div></div>
+<p class="note">Diez puntos de utilización son ${usd((ing10-ing)*12)} al año sin contratar a nadie.</p>`}}
+};
+
+/* ---------- simulator ---------- */
+const SIMQ=[
+{q:'T4 2026',t:'Estiaje',sit:'Se confirma el déficit eléctrico. 185 grandes consumidores tendrán cortes de 24 a 48 horas. Varios clientes industriales te llaman preocupados.',
+o:[['Lanzar una oferta de continuidad: evaluación, respaldo, sitio alterno y monitoreo.',{extra:60,caja:-15,mrr:2,rep:6},'Vendiste continuidad y sumaste 3 contratos de monitoreo.'],
+['Atender solo a quien pida.',{extra:15},'Vendiste algo, pero la oportunidad la tomaron otros.'],
+['Bajar precios de UPS y hardware para vender volumen rápido.',{extra:20,rep:-4},'Mucho movimiento, poco margen y clientes que ahora esperan descuentos.']]},
+{q:'T1 2027',t:'Proyecto público',sit:'Ganas un proyecto público de $600.000. Pagas al mayorista a 45 días; la entidad paga hasta dos meses después de la recepción.',
+o:[['Ejecutarlo con tu propia caja.',{extra:90,caja:-180,cajaNext:180},'Utilidad alta, pero 180 mil quedaron fuera de la empresa un trimestre.'],
+['Negociar anticipo y línea de crédito antes de firmar.',{extra:78,caja:-30,cajaNext:30},'Pagaste intereses, pero la caja nunca estuvo en riesgo.'],
+['No firmar.',{},'Sin riesgo y sin utilidad.']]},
+{q:'T2 2027',t:'Talento',sit:'Tu mejor ingeniero VCF recibe una oferta 30% superior.',
+o:[['Igualar la oferta.',{fijo:6,moral:-6},'Se quedó. Dos ingenieros más pidieron aumento al mes siguiente.'],
+['Ajuste justo, plan de carrera y rol de líder técnico.',{fijo:3,moral:10},'Se quedó y el equipo vio que hay camino para crecer.'],
+['Dejarlo ir.',{ubp:-25,fijo:-7,moral:-10},'Ahorraste nómina y perdiste capacidad de entrega durante meses.']]},
+{q:'T3 2027',t:'Broadcom',sit:'Tras otro cambio de licencias de VMware, tres clientes evalúan alternativas.',
+o:[['Evaluación honesta y migración como servicio cuando conviene.',{extra:50,rep:10},'Retuviste la confianza y facturaste la migración.'],
+['Defender VMware en todos los casos.',{ubp:-20,rep:-6},'Un cliente migró con otro integrador.'],
+['No hacer nada hasta la renovación.',{ubp:-10},'Llegaste tarde a dos de las tres conversaciones.']]},
+{q:'T4 2027',t:'IA',sit:'Puedes invertir en una línea de IA: equipo de 2 personas, laboratorio y oferta CoreAI.',
+o:[['Invertir en serio.',{fijo:25,caja:-40,grow:2},'Gasto alto ahora. El ingreso recurrente de IA empieza a crecer cada trimestre.'],
+['Piloto pequeño con un cliente.',{caja:-20,grow:0.7},'Aprendiste con poco riesgo. Crece despacio.'],
+['Esperar a que el mercado madure.',{},'Ahorraste. Un competidor empezó a ofrecer IA a tus clientes.']]},
+{q:'T1 2028',t:'Licitación',sit:'Licitación de $1,2 millones. Para ganar, el margen queda en 6%, con multas y contribución de 0,4%.',
+o:[['Participar al precio que gana.',{extra:72,extraNext:-60,caja:-100,cajaNext:100,rep:-4},'Ganaste. Un retraso del fabricante generó multas el trimestre siguiente.'],
+['Ofertar con margen suficiente aunque pierdas.',{},'Perdiste la licitación y conservaste el margen.'],
+['Ganar barato y recuperar con órdenes de cambio.',{extra:40,extraNext:-30},'Los cambios no se aprobaron a tiempo.']]},
+{q:'T2 2028',t:'Competencia',sit:'Un competidor baja precios 15% en infraestructura en tu región.',
+o:[['Igualar precios.',{ubp:-40},'Mantuviste clientes y perdiste margen de forma permanente.'],
+['Diferenciar con servicios y contratos multianuales.',{ubp:-10,mrr:3,rep:5},'Perdiste algunos proyectos y ganaste contratos de largo plazo.'],
+['Salir de ese segmento y reducir costos.',{ubp:-25,fijo:-12},'Empresa más pequeña y enfocada.']]},
+{q:'T3 2028',t:'Adquisición',sit:'Un pequeño proveedor de soporte se retira y ofrece su cartera de contratos por $120.000.',
+o:[['Comprar al contado.',{caja:-120,mrr:6,moral:-3},'Sumaste ingreso recurrente de inmediato. La caja quedó justa.'],
+['Comprar con pago parcial atado a que los clientes se queden.',{caja:-50,mrr:6,fijo:4},'Mismo ingreso, menos riesgo y caja sana.'],
+['No comprar.',{},'La cartera la compró un competidor.']]}
+];
+function simNew(){return {i:0,caja:220,ubp:290,mrr:12,fijo:300,moral:65,rep:60,grow:0,pend:{caja:0,extra:0},log:[],ops:[]}}
+function simOp(s,extra){return s.ubp+s.mrr*3*0.55-s.fijo+extra}
+function simPick(j){
+  const s=S.sim,Q=SIMQ[s.i],[label,fx,msg]=Q.o[j];
+  let extra=(fx.extra||0)+s.pend.extra;
+  s.ubp+=fx.ubp||0; s.fijo+=fx.fijo||0; s.mrr+=(fx.mrr||0)+s.grow; s.grow+=fx.grow||0;
+  s.moral=Math.max(0,Math.min(100,s.moral+(fx.moral||0))); s.rep=Math.max(0,Math.min(100,s.rep+(fx.rep||0)));
+  let note=msg;
+  if(s.moral<50){extra-=15;note+=' La moral baja redujo la productividad.'}
+  const op=simOp(s,extra);
+  s.caja+=op+(fx.caja||0)+s.pend.caja;
+  if(s.caja<0){const pen=Math.abs(s.caja)*0.1;s.caja-=pen;s.moral=Math.max(0,s.moral-10);note+=' Caja negativa: crédito de emergencia caro y nómina en riesgo.'}
+  s.pend={caja:fx.cajaNext||0,extra:fx.extraNext||0};
+  s.ops.push(op);s.log.push([Q.q,note,op]);s.i++;save();vSim();
+}
+function simEnd(s){
+  const ebitda=s.ops.slice(-4).reduce((a,b)=>a+b,0),ubr=s.mrr*3*0.55,share=ubr/(ubr+s.ubp)*100;
+  const mult=Math.max(2,3+Math.min(share,80)/100*5);const val=Math.max(0,ebitda)*mult+s.caja;
+  return {ebitda,share,mult,val};
+}
+
+/* ---------- views ---------- */
+const view=document.getElementById('view');
+function progress(){
+  const d=M.filter(m=>S.done[m.id]).length,c=Object.keys(S.cases).length;
+  document.getElementById('pbar').style.width=(d/M.length*100)+'%';
+  document.getElementById('plabel').textContent=`${d} de ${M.length} módulos`;
+  document.getElementById('pcase').textContent=`Casos ${c}/${C.length}`;
+}
+
+function vPerfil(){
+  view.innerHTML=`<section>
+  <div class="eyebrow">Diagnóstico profesional · octubre 2026</div>
+  <p class="thesis">De constructor a arquitecto de la empresa.</p>
+  <p class="lede">${esc(P.line)} Ese perfil te trajo hasta aquí. Como gerente, tu valor ya no será lo que construyes tú, sino lo que Coresolutions construye sin ti.</p>
+  <h3>Quién eres hoy</h3><p>${esc(P.hoy)}</p>
+  <h3>Fortalezas · con evidencia</h3>
+  <div class="pair">${P.fort.map(([h,d,e])=>`<div class="item"><div class="h">${esc(h)}</div><div class="d">${esc(d)}</div><div class="e">${esc(e)}</div></div>`).join('')}</div>
+  <h3>Brechas · lo que el cargo exige y todavía no te ha exigido</h3>
+  <div class="pair">${P.brec.map(([h,d,e])=>`<div class="item"><div class="h">${esc(h)}</div><div class="d">${esc(d)}</div><div class="e" style="color:var(--muted)">${esc(e)}</div></div>`).join('')}</div>
+  <h3>Riesgos personales</h3>
+  <ul class="core neg">${P.riesgos.map(r=>`<li>${esc(r)}</li>`).join('')}</ul>
+  <h3>Hacia dónde vas</h3>
+  ${P.hor.map(([a,b,c])=>`<div class="horizon"><div><div class="rt">${esc(a)}</div><div class="w">${esc(b)}</div></div><div>${esc(c)}</div></div>`).join('')}
+  <h3>Lo que el programa hace con esto</h3>
+  <ul class="core">
+  <li>El bloque 1 ataca foco y delegación antes que todo lo demás, porque sin eso no hay tiempo para el resto.</li>
+  <li>El bloque 2 cierra la brecha más grande: finanzas. Es el más largo.</li>
+  <li>Bloques 3 y 4 te dan contexto que hoy no está en ningún curso: Ecuador 2026 y el negocio de integración TI.</li>
+  <li>El bloque 5 usa tus fortalezas (sistemas, producto, IA, marca) como palancas de gerente.</li>
+  <li>Todo termina en un plan de gerencia que presentas a los accionistas.</li>
+  </ul>
+  <h3>Fuera de esta app</h3>
+  <ul class="core">
+  <li>Un mentor que haya dirigido una empresa de servicios TI. Una reunión al mes.</li>
+  <li>Un programa ejecutivo corto, como los de IDE Business School o INCAE, por la red de contactos tanto como por el contenido.</li>
+  <li>Un grupo de pares: 3 o 4 gerentes de empresas medianas que se reúnen cada trimestre.</li>
+  </ul>
+  <h3>Para que el programa sea 100% tuyo, consigue</h3>
+  <ul class="core neg">${P.falta.map(r=>`<li>${esc(r)}</li>`).join('')}</ul>
+  <div class="endrow"><button class="btn" data-v="radar">Medir mi radar</button><button class="ghost" data-v="plan">Ver el plan de 12 meses →</button></div>
+  </section>`;
+}
+
+function radarSVG(cur,first){
+  const cx=190,cy=170,r=120,n=R.length;
+  const pt=(i,v)=>{const a=-Math.PI/2+i*2*Math.PI/n;return[cx+Math.cos(a)*r*v/10,cy+Math.sin(a)*r*v/10]};
+  const poly=vals=>R.map((k,i)=>pt(i,vals[k[0]]||0).map(x=>x.toFixed(1)).join(',')).join(' ');
+  let g='';for(let l=2;l<=10;l+=2)g+=`<polygon points="${R.map((k,i)=>pt(i,l).join(',')).join(' ')}" fill="none" stroke="var(--line)"/>`;
+  R.forEach((k,i)=>{const[x,y]=pt(i,10);g+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="var(--line)"/>`;
+    const[lx,ly]=pt(i,12.2);const anc=Math.abs(lx-cx)<8?'middle':(lx>cx?'start':'end');
+    g+=`<text x="${lx}" y="${ly+3}" text-anchor="${anc}" font-family="Geist Mono,monospace" font-size="10" fill="var(--muted)">${esc(k[1])}</text>`});
+  const f=first?`<polygon points="${poly(first)}" fill="none" stroke="var(--muted)" stroke-dasharray="3 3"/>`:'';
+  return `<svg viewBox="0 0 380 340" role="img" aria-label="Radar de competencias de gerente">${g}${f}<polygon points="${poly(cur)}" fill="var(--accent-soft)" fill-opacity=".8" stroke="var(--accent)" stroke-width="1.5"/>${R.map((k,i)=>{const[x,y]=pt(i,cur[k[0]]||0);return`<circle cx="${x}" cy="${y}" r="3" fill="var(--accent)"/>`}).join('')}</svg>`;
+}
+let radarDraft=null;
+function vRadar(){
+  const last=S.radar[S.radar.length-1],first=S.radar.length>1?S.radar[0].v:null;
+  if(!radarDraft)radarDraft=Object.assign({},last?last.v:Object.fromEntries(R.map(k=>[k[0],4])));
+  view.innerHTML=`<section><h2>Radar de gerente</h2>
+  <p class="lede">Como tu Radar de Vida, pero para el cargo. Califícate de 1 a 10 en cada área, guarda y repite cada 30 días. La línea punteada es tu primera medición.</p>
+  <div class="radarwrap" style="margin-top:24px"><div class="radar" id="radarsvg">${radarSVG(radarDraft,first)}</div>
+  <div>${R.map(([k,l])=>`<div class="sl"><label class="top" for="r-${k}"><span>${esc(l)}</span><b id="rv-${k}">${radarDraft[k]}</b></label><input type="range" min="1" max="10" step="1" id="r-${k}" data-r="${k}" value="${radarDraft[k]}"></div>`).join('')}
+  <div class="endrow" style="margin-top:20px"><button class="btn" id="rsave">Guardar medición</button><span class="score">${S.radar.length?`${S.radar.length} medición${S.radar.length>1?'es':''} · última ${esc(last.d)}`:'Sin mediciones'}</span></div></div></div>
+  ${first?`<div class="legend"><span><i style="background:var(--accent)"></i>Ahora</span><span><i style="background:var(--muted)"></i>Primera medición</span></div>`:''}
+  <h3>Cómo leerlo</h3>
+  <ul class="core"><li>Lo más bajo define qué módulos reforzar ese mes.</li><li>Sé estricto: un 7 significa que podrías enseñarlo.</li><li>La meta para septiembre 2027 es 7 o más en todo.</li></ul>
+  </section>`;
+}
+
+function vPlan(){
+  let k=0;
+  view.innerHTML=`<section><h2>Plan de 12 meses</h2>
+  <p class="lede">Octubre 2026 a septiembre 2027. Unas 4 horas por semana: 1 hora para leer los conceptos, 1 para la herramienta o el caso, 2 para el entregable con datos reales de Coresolutions.</p>
+  ${B.map(b=>`<div class="block"><div class="blockhead"><span class="bt">${esc(b.t)}</span><span class="bm">${esc(b.m)}</span></div><p class="blockdesc">${esc(b.d)}</p>
+  ${M.filter(m=>m.b===b.id).map(m=>{k++;return `<button class="row" data-open="${m.id}"><span class="rn">${String(k).padStart(2,'0')}</span><span><div class="rt">${esc(m.t)}</div><div class="rs">${esc(m.s)}${m.tool?' · con herramienta':''}</div></span><span class="chip ${S.done[m.id]?'done':''}">${S.done[m.id]?'Hecho':(S.notes[m.id]?'En curso':'Pendiente')}</span></button>`}).join('')}</div>`).join('')}
+  </section>`;
+}
+
+function toolHTML(key){
+  const t=T[key];const st=S.tools[key]||{};const v={};t.f.forEach(([k,,d])=>v[k]=st[k]??d);
+  return `<div class="tool" data-tool="${key}"><div class="tag"><span>${t.tag}</span><span>Valores de ejemplo · usa los tuyos</span></div>
+  <div class="fields">${t.f.map(([k,l])=>`<label class="f" for="t-${key}-${k}">${esc(l)}<input type="number" id="t-${key}-${k}" data-k="${k}" value="${v[k]}" step="any"></label>`).join('')}</div>
+  <div class="res">${t.calc(v)}</div></div>`;
+}
+function recalc(el){const key=el.dataset.tool,v={};el.querySelectorAll('input').forEach(i=>{v[i.dataset.k]=parseFloat(i.value)||0});S.tools[key]=v;save();el.querySelector('.res').innerHTML=T[key].calc(v)}
+
+function vModulo(id){
+  const i=M.findIndex(m=>m.id===id),m=M[i],next=M[i+1],b=B.find(x=>x.id===m.b);
+  view.innerHTML=`<section>
+  <button class="back" data-v="plan">← Plan</button>
+  <div class="eyebrow">Módulo ${String(i+1).padStart(2,'0')} · ${esc(b.t)} · ${esc(b.m)}</div>
+  <h1 style="font-size:clamp(26px,5vw,36px)">${esc(m.t)}</h1>
+  <p class="why">${esc(m.why)}</p>
+  <h3>Lo que tienes que entender</h3>
+  <dl>${m.c.map(([a,d])=>`<div><dt>${esc(a)}</dt><dd>${esc(d)}</dd></div>`).join('')}</dl>
+  <h3>En Coresolutions</h3>
+  <ul class="core">${m.core.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>
+  ${m.tool?`<h3>Practica</h3>${toolHTML(m.tool)}`:''}
+  ${m.id==='ritmo'?`<h3>Practica</h3><p><button class="btn" data-v="tablero">Abrir el tablero</button></p>`:''}
+  ${m.id==='valuacion'?`<h3>Otra herramienta</h3>${toolHTML('mix')}`:''}
+  <h3>Entregable</h3>
+  <p class="prompt">${esc(m.ex)}</p>
+  <textarea id="note-${m.id}" data-note="${m.id}" placeholder="Escribe aquí. Se guarda solo.">${esc(S.notes[m.id]||'')}</textarea>
+  <div class="saved" id="saved-${m.id}"></div>
+  <h3>Lectura</h3>
+  ${m.read.map(([t,a,w])=>`<div class="read"><div class="t">${esc(t)}</div><div class="a">${esc(a)}</div><p style="margin-top:6px">${esc(w)}</p></div>`).join('')}
+  ${m.src?`<h3>Fuentes</h3><div class="src">${m.src.map(k=>`<a href="${SRC[k][1]}" target="_blank" rel="noopener">${esc(SRC[k][0])}</a>`).join('')}</div>`:''}
+  <div class="endrow"><button class="btn ${S.done[m.id]?'on':''}" data-done="${m.id}">${S.done[m.id]?'Completado':'Marcar como completado'}</button>
+  ${next?`<button class="ghost" data-open="${next.id}">Siguiente: ${esc(next.t)} →</button>`:''}</div>
+  </section>`;
+  window.scrollTo({top:0});
+}
+
+function vSim(){
+  if(!S.sim){
+    view.innerHTML=`<section><h2>Simulador de gerencia</h2>
+    <p class="lede">Diriges una empresa ficticia parecida a Coresolutions durante 8 trimestres, de fines de 2026 a 2028. Cada trimestre trae una decisión con el contexto real de Ecuador. Al final ves caja, ingreso recurrente y cuánto vale la empresa.</p>
+    <p class="note">Cifras en miles de USD. Utilidad bruta de proyectos, gasto fijo e ingreso recurrente se mueven según tus decisiones.</p>
+    <p style="margin-top:24px"><button class="btn" id="simstart">Empezar</button></p></section>`;return;
+  }
+  const s=S.sim,done=s.i>=SIMQ.length,ubr=s.mrr*3*0.55;
+  const state=`<div class="simstate">
+  <div><span>Caja</span><b class="${s.caja<0?'neg':''}">${fmt(s.caja)}</b></div>
+  <div><span>Utilidad bruta proyectos / trim</span><b>${fmt(s.ubp)}</b></div>
+  <div><span>MRR</span><b>${dec(s.mrr,1)}</b></div>
+  <div><span>Gasto fijo / trim</span><b>${fmt(s.fijo)}</b></div>
+  <div><span>Moral</span><b>${fmt(s.moral)}</b></div>
+  <div><span>Reputación</span><b>${fmt(s.rep)}</b></div></div>`;
+  const dots=`<div class="qdots">${SIMQ.map((q,i)=>`<i class="${i<s.i?'on':''}"></i>`).join('')}</div>`;
+  const log=s.log.length?`<h3>Lo que pasó</h3><div class="log">${s.log.map(([q,n,op])=>`<div><span>${esc(q)}</span><span>${esc(n)}</span><span>${op>=0?'+':''}${fmt(op)}</span></div>`).join('')}</div><p class="note">La columna derecha es la utilidad operativa de cada trimestre.</p>`:'';
+  if(done){
+    const e=simEnd(s);const base=simEnd({ops:[9.8,9.8,9.8,9.8],mrr:12,ubp:290,caja:220});
+    view.innerHTML=`<section><h2>Resultado</h2>${dots}${state}
+    <div class="out" style="border-top:0"><div><span>EBITDA últimos 4 trim.</span><b>${fmt(e.ebitda)}</b></div><div><span>Utilidad recurrente</span><b>${pct(e.share)}</b></div><div><span>Múltiplo</span><b>${dec(e.mult,1)}x</b></div><div><span>Valor estimado</span><b>${fmt(e.val)}</b></div></div>
+    <p class="why" style="margin-top:24px">${e.val>base.val*1.6?'Construiste una empresa que vale mucho más que al inicio.':e.val>base.val?'La empresa vale más que al inicio, con espacio para mejorar.':'La empresa vale menos que al inicio. Revisa qué decisiones costaron caja o margen.'}</p>
+    <p class="note">Al empezar, la empresa valía unos ${fmt(base.val)}.</p>
+    ${log}<p style="margin-top:24px"><button class="btn" id="simreset">Jugar de nuevo</button></p></section>`;return;
+  }
+  const Q=SIMQ[s.i];
+  view.innerHTML=`<section><h2>Simulador de gerencia</h2>${dots}${state}
+  <div class="case" style="border-bottom:0"><div class="eyebrow">${esc(Q.q)} · ${esc(Q.t)}</div><p class="sit">${esc(Q.sit)}</p>
+  <div class="opts">${Q.o.map((o,j)=>`<button class="opt" data-sim="${j}"><span class="k">${'ABC'[j]}</span><span>${esc(o[0])}</span></button>`).join('')}</div></div>
+  ${log}<p style="margin-top:20px"><button class="ghost" id="simreset">Reiniciar</button></p></section>`;
+}
+
+function vCasos(){
+  const pts=Object.entries(S.cases).reduce((a,[i,o])=>a+C[i].o[o][1],0);
+  view.innerHTML=`<section><h2>Casos</h2><p class="lede">Situaciones reales de un gerente de integrador TI en Ecuador. Decide primero; la respuesta aparece después.</p>
+  <div class="score">${Object.keys(S.cases).length} de ${C.length} resueltos · ${pts} de ${C.length*2} puntos</div>
+  ${C.map((c,i)=>{const pick=S.cases[i];const has=pick!==undefined;const best=c.o.findIndex(o=>o[1]===2);
+  return `<div class="case"><div class="eyebrow">Caso ${String(i+1).padStart(2,'0')} · ${esc(c.t)}</div><p class="sit">${esc(c.sit)}</p>
+  <div class="opts">${c.o.map((o,j)=>`<button class="opt ${has&&pick===j?'pick s'+o[1]:''}" data-case="${i}" data-o="${j}" ${has?'disabled':''}><span class="k">${'ABC'[j]}</span><span>${esc(o[0])}</span></button>`).join('')}</div>
+  ${has?`<div class="fb"><div class="v s${c.o[pick][1]}">${['Mala decisión','Aceptable','Buena decisión'][c.o[pick][1]]}</div>${esc(c.o[pick][2])}${c.o[pick][1]<2?`<p style="margin:8px 0 0;color:var(--muted)">Mejor opción: ${'ABC'[best]}. ${esc(c.o[best][2])}</p>`:''}</div>
+  <p style="margin-top:10px"><button class="ghost" data-reset="${i}">Volver a intentar</button></p>`:''}</div>`}).join('')}</section>`;
+}
+
+function kStatus(dir,a,t){
+  if(isNaN(a)||isNaN(t))return['—',''];
+  if(dir>0?a>=t:a<=t)return['Bien','ok'];
+  const gap=dir>0?(t-a)/Math.max(Math.abs(t),1):(a-t)/Math.max(Math.abs(t),1);
+  return gap<=.15?['Cerca','warn']:['Atención','bad'];
+}
+function vTablero(){
+  const ex=!Object.keys(S.kpi).length;
+  view.innerHTML=`<section><h2>Tablero del gerente</h2><p class="lede">Los 10 números que un gerente de integrador TI revisa cada mes. ${ex?'Los valores actuales son de ejemplo. Reemplázalos con los de Coresolutions.':'Actualízalo una vez al mes.'}</p>
+  <div class="kpi kpihead"><span>Indicador</span><span>Actual</span><span>Meta</span><span>Estado</span></div>
+  ${K.map(([id,n,u,dir,a,t])=>{const v=S.kpi[id]||{a,t};const[s,c]=kStatus(dir,parseFloat(v.a),parseFloat(v.t));
+  return `<div class="kpi" data-kpi="${id}"><div><div class="n">${esc(n)}</div><div class="h">${esc(u)} · ${dir>0?'más es mejor':'menos es mejor'}</div></div>
+  <input type="number" step="any" id="k-${id}-a" data-f="a" value="${v.a}" aria-label="${esc(n)} actual">
+  <input type="number" step="any" id="k-${id}-t" data-f="t" value="${v.t}" aria-label="${esc(n)} meta">
+  <span class="chip ${c}" data-st>${s}</span></div>`}).join('')}
+  <p class="note">Las metas son referencias habituales en integradores TI. Ajústalas al plan de Coresolutions.</p>
+  ${ex?'':'<p style="margin-top:12px"><button class="ghost" id="kreset">Volver a los valores de ejemplo</button></p>'}</section>`;
+}
+
+function show(v,arg){
+  document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.v===(v==='modulo'?'plan':v))));
+  ({perfil:vPerfil,radar:vRadar,plan:vPlan,modulo:()=>vModulo(arg),sim:vSim,casos:vCasos,tablero:vTablero})[v]();
+  progress();
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click',e=>{
+  const t=e.target.closest('button');if(!t)return;
+  const y=window.scrollY;
+  if(t.dataset.v){show(t.dataset.v);window.scrollTo({top:0});return}
+  if(t.dataset.open){show('modulo',t.dataset.open);return}
+  if(t.dataset.done){const id=t.dataset.done;S.done[id]=!S.done[id];save();t.classList.toggle('on',!!S.done[id]);t.textContent=S.done[id]?'Completado':'Marcar como completado';progress();return}
+  if(t.dataset.case!==undefined){S.cases[t.dataset.case]=+t.dataset.o;save();vCasos();progress();window.scrollTo({top:y});return}
+  if(t.dataset.reset!==undefined){delete S.cases[t.dataset.reset];save();vCasos();progress();window.scrollTo({top:y});return}
+  if(t.dataset.sim!==undefined){simPick(+t.dataset.sim);return}
+  if(t.id==='simstart'){S.sim=simNew();save();vSim();return}
+  if(t.id==='simreset'){S.sim=simNew();save();vSim();window.scrollTo({top:0});return}
+  if(t.id==='rsave'){const d=new Date();S.radar.push({d:d.toLocaleDateString('es-EC',{day:'numeric',month:'short',year:'numeric'}),v:Object.assign({},radarDraft)});save();vRadar();window.scrollTo({top:y});return}
+  if(t.id==='kreset'){S.kpi={};save();vTablero();return}
+});
+let timer;
+document.addEventListener('input',e=>{
+  const el=e.target;
+  const tool=el.closest('[data-tool]');if(tool){recalc(tool);return}
+  if(el.dataset.r){radarDraft[el.dataset.r]=+el.value;document.getElementById('rv-'+el.dataset.r).textContent=el.value;
+    const first=S.radar.length>1?S.radar[0].v:null;document.getElementById('radarsvg').innerHTML=radarSVG(radarDraft,first);return}
+  if(el.dataset.note){S.notes[el.dataset.note]=el.value;clearTimeout(timer);timer=setTimeout(()=>{save();const s=document.getElementById('saved-'+el.dataset.note);if(s)s.textContent='Guardado'},400);return}
+  const k=el.closest('[data-kpi]');if(k){const id=k.dataset.kpi,def=K.find(x=>x[0]===id);
+    K.forEach(([kid,,,,a,t])=>{if(!S.kpi[kid])S.kpi[kid]={a,t}});
+    S.kpi[id]={a:k.querySelector('[data-f=a]').value,t:k.querySelector('[data-f=t]').value};save();
+    const[s,c]=kStatus(def[3],parseFloat(S.kpi[id].a),parseFloat(S.kpi[id].t));const st=k.querySelector('[data-st]');st.textContent=s;st.className='chip '+c}
+});
+
+const h=(location.hash||'').slice(1);
+if(['perfil','radar','plan','sim','casos','tablero'].includes(h))show(h);else if(M.some(m=>m.id===h))show('modulo',h);else show('perfil');
+</script>
+
+</body>
+</html>
